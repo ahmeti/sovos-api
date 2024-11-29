@@ -16,6 +16,7 @@ use Bulut\DespatchService\SendDespatch;
 use Bulut\DespatchService\SendDespatchResponse;
 use Bulut\Exceptions\GlobalForibaException;
 use Bulut\Exceptions\SchemaValidationException;
+use Bulut\Exceptions\SovosException;
 use Bulut\Exceptions\UnauthorizedException;
 use GuzzleHttp\Client;
 
@@ -201,7 +202,7 @@ class FITDespatchService
 
                 throw new GlobalForibaException($fault->faultstring, (int) $fault->faultcode);
             } else {
-                throw new \Exception("Fatal Error : Code '".$fault->faultcode."', Message '".$fault->faultstring."' [".$responseText.'].');
+                throw new SovosException("Fatal Error : Code '".$fault->faultcode."', Message '".$fault->faultstring."' [".$responseText.'].');
             }
         }
 

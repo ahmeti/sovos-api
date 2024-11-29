@@ -4,6 +4,7 @@ namespace Bulut\FITApi;
 
 use Bulut\Exceptions\GlobalForibaException;
 use Bulut\Exceptions\SchemaValidationException;
+use Bulut\Exceptions\SovosException;
 use Bulut\Exceptions\UnauthorizedException;
 use Bulut\InvoiceService\GetEnvelopeStatus;
 use Bulut\InvoiceService\GetEnvelopeStatusResponse;
@@ -196,7 +197,7 @@ class FITInvoiceService
 
                 throw new GlobalForibaException($fault->faultstring, (int) $fault->faultcode);
             } else {
-                throw new \Exception("Fatal Error : Code '".$fault->faultcode."', Message '".$fault->faultstring."' [".$responseText.'].');
+                throw new SovosException("Fatal Error : Code '".$fault->faultcode."', Message '".$fault->faultstring."' [".$responseText.'].');
             }
         }
 
