@@ -23,31 +23,36 @@ use GuzzleHttp\Client;
 
 class FITInvoiceService
 {
-    private static $TEST_URL = "https://efaturawstest.fitbulut.com/ClientEInvoiceServices/ClientEInvoiceServicesPort.svc";
-    private static $PROD_URL = "https://efaturaws.fitbulut.com/ClientEInvoiceServices/ClientEInvoiceServicesPort.svc";
-    private static $URL = "";
+    private static $TEST_URL = 'https://efaturawstest.fitbulut.com/ClientEInvoiceServices/ClientEInvoiceServicesPort.svc';
+
+    private static $PROD_URL = 'https://efaturaws.fitbulut.com/ClientEInvoiceServices/ClientEInvoiceServicesPort.svc';
+
+    private static $URL = '';
+
     private $client;
+
     private $headers = [
         'Content-Type' => 'text/xml;charset=UTF-8',
         'Accept' => 'text/xml',
         'Cache-Control' => 'no-cache',
-        'Pragma' => 'no-cache'
+        'Pragma' => 'no-cache',
     ];
-    private $soapXmlPref = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ein=\"http:/fitcons.com/eInvoice/\">
+
+    private $soapXmlPref = '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ein="http:/fitcons.com/eInvoice/">
            <soapenv:Header/>
            <soapenv:Body>
            %s
            </soapenv:Body>
             </soapenv:Envelope>
-    ";
-    private $soapSubClassPrefix = "ein";
+    ';
+
+    private $soapSubClassPrefix = 'ein';
 
     /**
      * FITInvoiceService constructor.
-     * @param array $options
-     * @param bool $isTest
      *
-     *
+     * @param  array  $options
+     * @param  bool  $isTest
      */
     public function __construct($options = [], $isTest = false)
     {
@@ -57,12 +62,12 @@ class FITInvoiceService
         }
         $parsed_url = parse_url(self::$URL);
         $this->headers['Host'] = $parsed_url['host'];
-        $this->headers['Authorization'] = "Basic " . $this->getAuth($options['username'], $options['password']);
+        $this->headers['Authorization'] = 'Basic '.$this->getAuth($options['username'], $options['password']);
         $this->client = new Client();
     }
 
     /**
-     * @param string $TEST_URL
+     * @param  string  $TEST_URL
      */
     public static function setTestUrl($TEST_URL)
     {
@@ -70,7 +75,7 @@ class FITInvoiceService
     }
 
     /**
-     * @param string $PROD_URL
+     * @param  string  $PROD_URL
      */
     public static function setProdUrl($PROD_URL)
     {
@@ -78,7 +83,7 @@ class FITInvoiceService
     }
 
     /**
-     * @param string $soapXmlPref
+     * @param  string  $soapXmlPref
      */
     public function setSoapXmlPref($soapXmlPref)
     {
@@ -86,7 +91,7 @@ class FITInvoiceService
     }
 
     /**
-     * @param string $soapSubClassPrefix
+     * @param  string  $soapSubClassPrefix
      */
     public function setSoapSubClassPrefix($soapSubClassPrefix)
     {
@@ -96,26 +101,22 @@ class FITInvoiceService
     /**
      * Basic Auth fonksiyonu.
      *
-     * @param $username
-     * @param $password
      * @return string
      */
     protected function getAuth($username, $password)
     {
-        return base64_encode($username . ':' . $password);
+        return base64_encode($username.':'.$password);
     }
 
     /**
      * Nesneyi SOAP/XML Çeviren sınıf.
      *
-     * @param $methodName
-     * @param $variables
      * @return string
      */
     protected function makeXml($methodName, $variables)
     {
 
-        $subXml = "";
+        $subXml = '';
         foreach ($variables as $key => $val) {
 
             if (is_array($val)) {
@@ -127,37 +128,40 @@ class FITInvoiceService
                         $soapAction = $get_variables['soapAction'];
                         unset($get_variables['methodName']);
                         unset($get_variables['soapAction']);
-                        $subXml .= '<' . $this->soapSubClassPrefix . ':' . $key . '>';
+                        $subXml .= '<'.$this->soapSubClassPrefix.':'.$key.'>';
                         foreach ($get_variables as $mainKey => $variable) {
 
                             if (strlen($variable) > 0) {
-                                $subXml .= '<' . $this->soapSubClassPrefix . ':' . $mainKey . '>' . (string)$variable . '</' . $this->soapSubClassPrefix . ':' . $mainKey . '>';
+                                $subXml .= '<'.$this->soapSubClassPrefix.':'.$mainKey.'>'.(string) $variable.'</'.$this->soapSubClassPrefix.':'.$mainKey.'>';
                             }
 
                         }
-                        $subXml .= '</' . $this->soapSubClassPrefix . ':' . $key . '>';
+                        $subXml .= '</'.$this->soapSubClassPrefix.':'.$key.'>';
                         //$subXml = $this->makeXml($methodName, $get_variables);
                     } else {
-                        if (strlen($v) > 0)
-                            $subXml .= '<' . $this->soapSubClassPrefix . ':' . $key . '>' . (string)$v . '</' . $this->soapSubClassPrefix . ':' . $key . '>';
+                        if (strlen($v) > 0) {
+                            $subXml .= '<'.$this->soapSubClassPrefix.':'.$key.'>'.(string) $v.'</'.$this->soapSubClassPrefix.':'.$key.'>';
+                        }
                     }
 
                 }
             } else {
-                if (strlen($val) > 0)
-                    $subXml .= '<' . $this->soapSubClassPrefix . ':' . $key . '>' . (string)$val . '</' . $this->soapSubClassPrefix . ':' . $key . '>';
+                if (strlen($val) > 0) {
+                    $subXml .= '<'.$this->soapSubClassPrefix.':'.$key.'>'.(string) $val.'</'.$this->soapSubClassPrefix.':'.$key.'>';
+                }
             }
         }
-        $treeXml = '<' . $this->soapSubClassPrefix . ':' . $methodName . '>' . $subXml . '</' . $this->soapSubClassPrefix . ':' . $methodName . '>';
+        $treeXml = '<'.$this->soapSubClassPrefix.':'.$methodName.'>'.$subXml.'</'.$this->soapSubClassPrefix.':'.$methodName.'>';
         $mainXml = sprintf($this->soapXmlPref, $treeXml);
+
         return trim($mainXml);
     }
 
     /**
      * Foribadan gelene cevabı işleyen SOAP/XML sınıfı.
      *
-     * @param $responseText
      * @return \SimpleXMLElement
+     *
      * @throws GlobalForibaException
      * @throws SchemaValidationException
      * @throws UnauthorizedException
@@ -170,28 +174,32 @@ class FITInvoiceService
         if (isset($soap->xpath('//s:Body/s:Fault')[0])) {
             $fault = $soap->xpath('//s:Body/s:Fault')[0];
 
-            if ($fault->faultstring == "Unauthorized")
-                throw new UnauthorizedException($fault->faultstring, (int)$fault->faultcode);
-            elseif ($fault->faultstring == "Şema validasyon hatası") {
+            if ($fault->faultstring == 'Unauthorized') {
+                throw new UnauthorizedException($fault->faultstring, (int) $fault->faultcode);
+            } elseif ($fault->faultstring == 'Şema validasyon hatası') {
                 $message = $soap->xpath('//s:Body/s:Fault/detail');
                 if (isset($message[0])) {
-                    throw  new SchemaValidationException($message[0]->ProcessingFault->Message, (int)$message[0]->ProcessingFault->Code);
-                } else
-                    throw  new SchemaValidationException('Bilinmeyen bir şema hatası oluştu.');
-            } elseif ($fault->faultcode == "s:Server") {
+                    throw new SchemaValidationException($message[0]->ProcessingFault->Message, (int) $message[0]->ProcessingFault->Code);
+                } else {
+                    throw new SchemaValidationException('Bilinmeyen bir şema hatası oluştu.');
+                }
+            } elseif ($fault->faultcode == 's:Server') {
                 $message = $soap->xpath('//s:Body/s:Fault/detail');
 
                 if (isset($message[0])) {
                     $fault->faultstring = $message[0]->ProcessingFault->Message;
                     $fault->faultcode = $message[0]->ProcessingFault->Code;
                 }
-                if ($fault->faultcode == "s:Server")
+                if ($fault->faultcode == 's:Server') {
                     $fault->faulcode = 0;
+                }
 
-                throw new GlobalForibaException($fault->faultstring, (int)$fault->faultcode);
-            } else
-                throw new \Exception("Fatal Error : Code '" . $fault->faultcode . "', Message '" . $fault->faultstring . "' [" . $responseText . "].");
+                throw new GlobalForibaException($fault->faultstring, (int) $fault->faultcode);
+            } else {
+                throw new \Exception("Fatal Error : Code '".$fault->faultcode."', Message '".$fault->faultstring."' [".$responseText.'].');
+            }
         }
+
         return $soap;
     }
 
@@ -199,14 +207,13 @@ class FITInvoiceService
     {
         $vars = get_object_vars($object);
         foreach ($vars as $key => $val) {
-            $object->{$key} = (string)$data->{$key};
+            $object->{$key} = (string) $data->{$key};
         }
     }
 
     /**
      * İstekleri Foriba üzerine iletmeye yardımcı fonksiyon.
      *
-     * @param $request
      * @return mixed
      */
     protected function request($request)
@@ -222,14 +229,15 @@ class FITInvoiceService
         $response = $this->client->request('POST', self::$URL, [
             'headers' => $this->headers,
             'body' => $xmlMake,
-            'http_errors' => false
+            'http_errors' => false,
         ]);
+
         return $response->getBody()->getContents();
     }
 
     /**
-     * @param GetUserList $request
      * @return array GetUserListResponse
+     *
      * @throws
      */
     public function GetUserListRequest(GetUserList $request) //: GetUserListResponse
@@ -243,12 +251,13 @@ class FITInvoiceService
             $this->fillObj($responseObj, $user);
             $list[] = $responseObj;
         }
+
         return $list;
     }
 
     /**
-     * @param GetUblList $request
      * @return array GetUblListResponse
+     *
      * @throws
      */
     public function GetUblListRequest(GetUblList $request)
@@ -263,12 +272,13 @@ class FITInvoiceService
             $this->fillObj($responseObj, $ubl);
             $list[] = $responseObj;
         }
+
         return $list;
     }
 
     /**
-     * @param GetInvoiceView $request
      * @return GetInvoiceViewResponse
+     *
      * @throws
      */
     public function GetInvoiceViewRequest(GetInvoiceView $request)
@@ -277,14 +287,15 @@ class FITInvoiceService
         $soap = $this->getXml($responseText);
         $body = $soap->xpath('//s:Body')[0];
         $responseObj = new GetInvoiceViewResponse();
-        $responseObj->DocData = (string)$body->getInvoiceViewResponse->DocData;
+        $responseObj->DocData = (string) $body->getInvoiceViewResponse->DocData;
         $responseObj->setDocType($request->DocType);
+
         return $responseObj;
     }
 
     /**
-     * @param GetUbl $request
      * @return array
+     *
      * @throws
      */
     public function GetUblRequest(GetUbl $request)
@@ -299,24 +310,23 @@ class FITInvoiceService
             foreach ($ubl->getUBLResponse->DocData as $data) {
 
                 $responseObj = new GetUblResponse();
-                $responseObj->DocData = (string)$data;
+                $responseObj->DocData = (string) $data;
                 $responseObj->setDocType($request->Parameters);
                 $list[] = $responseObj;
             }
         } else {
             $responseObj = new GetUblResponse();
-            $responseObj->DocData = (string)$ubl->getUBLResponse->DocData;
+            $responseObj->DocData = (string) $ubl->getUBLResponse->DocData;
             $responseObj->setDocType($request->Parameters);
             $list[] = $responseObj;
         }
-
 
         return $list;
     }
 
     /**
-     * @param GetEnvelopeStatus $request
      * @return array GetEnvelopeResponse
+     *
      * @throws
      */
     public function GetEnvelopeStatusRequest(GetEnvelopeStatus $request)
@@ -330,12 +340,13 @@ class FITInvoiceService
             $this->fillObj($responseObj, $status);
             $list[] = $responseObj;
         }
+
         return $list;
     }
 
     /**
-     * @param SendUBL $request
      * @return array SendUBLResponse
+     *
      * @throws
      */
     public function SendUBLRequest(SendUBL $request)
@@ -349,6 +360,7 @@ class FITInvoiceService
             $this->fillObj($responseObj, $status);
             $list[] = $responseObj;
         }
+
         return $list;
     }
 
