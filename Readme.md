@@ -29,7 +29,7 @@
 
 ## Kurulum
 ```sh
-composer require ahmeti/sovos-api
+composer require "ahmeti/sovos-api:^1.0"
 ```
 
 ## Gereksinimler
