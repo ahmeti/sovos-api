@@ -10,6 +10,9 @@ use Ahmeti\Sovos\Archive\SendInvoice;
 use Ahmeti\Sovos\Exceptions\GlobalException;
 use Ahmeti\Sovos\Exceptions\SchemaValidationException;
 use Ahmeti\Sovos\Exceptions\UnauthorizedException;
+use Ahmeti\Sovos\SMM\CancelDocument;
+use Ahmeti\Sovos\SMM\GetDocument;
+use Ahmeti\Sovos\SMM\SendDocument;
 use GuzzleHttp\Client;
 
 class Service
@@ -82,6 +85,16 @@ class Service
             $xmlMake = str_replace(['get:', 'xmlns:get'], ['inv:', 'xmlns:inv'], $xmlMake);
         }
 
+        if (get_class($request) == CancelDocument::class) {
+            $xmlMake = str_replace(['get:', ':get'], ['esmm:', ':esmm'], $xmlMake);
+        }
+        if (get_class($request) == SendDocument::class) {
+            $xmlMake = str_replace(['get:', ':get'], ['esmm:', ':esmm'], $xmlMake);
+        }
+        if (get_class($request) == GetDocument::class) {
+            $xmlMake = str_replace(['get:', ':get'], ['esmm:', ':esmm'], $xmlMake);
+        }
+
         $this->headers['SOAPAction'] = $soapAction;
         $this->headers['Content-Length'] = strlen($xmlMake);
         $response = $this->client->request('POST', $this->url, [
@@ -120,7 +133,7 @@ class Service
                 $this->makeSubXml($val, $subXml, $prefix, $namespace);
             } else {
                 if (strlen($val) > 0) {
-                    $subXml .= '<'.($prefix ? $this->soapSubClassPrefix.':' : '').$key.'>'.$val.'</'.($prefix ? $this->soapSubClassPrefix.':' : '').''.$key.'>';
+                    $subXml .= '<'.($prefix ? $this->soapSubClassPrefix.':' : '').$key.'>'.$val.'</'.($prefix ? $this->soapSubClassPrefix.':' : '').$key.'>';
                 }
             }
         }
