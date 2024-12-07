@@ -44,9 +44,9 @@ composer require "ahmeti/sovos-api:^1.0"
 $service = new Ahmeti\Sovos\Api\InvoiceService(
     username: 'WS_KULLANICIADI',
     password: 'WS_SIFRE',
-    test: true
+    test: true,
+    debug: false
 );
-// Son parametre, TEST ortamında ise true yapabilirsiniz veya boş bırakabilirsiniz.
 ```
 
 ## E-Fatura, E-İrsaliye Kayıtlı Kullanıcılar Listesi (Zip)
@@ -142,8 +142,6 @@ $data = $service->GetEnvelopeStatusRequest($getEnvelopeRequest);
 
 ## E-Fatura Uygulama Yanıtı UBL Oluşturma
 Örnek bir fatura KABUL uygulama yanıtı örneğidir. Örnekte kullanılan alanlar ve isimler GIB ve Sovos standartlarına göre oluşturulmuştur. Alanların anlamı için GIB ve Sovos dökümanlarını inceleyebilirsiniz.
-<details>
-    <summary>Örneği incelemek için tıklayınız.</summary>
 
 ```php
 $appResp = new Ahmeti\Ubl\ApplicationResponse(
@@ -201,220 +199,170 @@ $appResp = new Ahmeti\Ubl\ApplicationResponse(
 
 $xml = (new Ahmeti\Ubl\Utils\UblInvoice($appResp))->getApplicationResponseXML();
 ```
-</details>
 
 ## E-Fatura UBL Oluşturma
 Örnek bir E-Fatura oluşturmuş olduk bu oluşturduğumuz faturayı Sovos servislerine ileterek faturalaştırmış olacağız. Dikkat etmemiz gereken nokta Fatura UUID ve XML olarak çıktı verir UUID ile faturayı takip edebilirsiniz oluşan XML'i de Sovos sistemine iletebilirsiniz. Alan detayları için GIB ve Sovos dökümanlarına bakınız.
-<details>
-    <summary>Örneği incelemek için tıklayınız.</summary>
 
 ```php
-$docRefences = [];
+$invoice = new Ahmeti\Ubl\Invoice(
+    UBLVersionID: '2.1', // Uluslararası fatura standardı 2.1
+    CustomizationID: 'TR1.2', // GİB UBLTR olarak isimlendirdiği Türkiye'ye özgü 1.2 efatura formatını kullanıyor.
+    ProfileID: 'TICARIFATURA', // Ticari ve temel olarak iki çeşittir. Ticari faturalarda sistem yanıtı(application response) döner.
+    ID: 'FIT2017000000021', // Eğer fatura ID FIT tarafından oluşacak ise, ID alanı boş, CUST_INV_ID alanı dolu gelmelidir. Eğer kullanıcı firma tarafından oluşacak ise, ID alanı dolu CUST_INV_ID alanı boş olarak gönderilmeli.
+    CopyIndicator: 'false', // Kopyası mı, asıl süret mi olduğu belirlenir
+    UUID: '1d7f3f8b-0b0b-4c8b-8b1f-7f6b1f6b1f6b', // Fatura UUID
+    IssueDate: '2021-09-01', // Fatura tarihi Y-m-d
+    IssueTime: '12:00:00', // Fatura saati H:i:s
+    InvoiceTypeCode: 'SATIS', // Gönderilecek fatura çeşidi, satış, iade vs.
+    Note: ['Test not'], // İsteğe bağlı not alanı
+    DocumentCurrencyCode: 'TRY', // Efatura para birimi
+    LineCountNumeric: 1, // Fatura kalemlerinin sayısı
+    AdditionalDocumentReference: [
+        // Fatura ID otomatik oluşacak ise bu alanı göndermelisiniz.
+        new Ahmeti\Ubl\DocumentReference(
+            ID: '000000000000001', // ERP Fatura ID
+            IssueDate: '2021-09-01', // Fatura tarihi Y-m-d
+            DocumentTypeCode: 'CUST_INV_ID' // Fatura tipi
+        ),
+    ],
+    AccountingSupplierParty: new Ahmeti\Ubl\AccountingSupplierParty(
+        Party: new Ahmeti\Ubl\Party(
+            WebsiteURI: 'https://ahmeti.com.tr',
+            PartyIdentification: new Ahmeti\Ubl\PartyIdentification(
+                ID: ['val' => '12345678901', 'attrs' => ['schemeID="VKN"']]
+            ),
+            PartyName: new Ahmeti\Ubl\PartyName(
+                Name: 'Ahmet İmamoğlu'
+            ),
+            Person: new Ahmeti\Ubl\Person(
+                FirstName: 'Ahmet',
+                FamilyName: 'İmamoğlu'
+            ),
+            PostalAddress: new Ahmeti\Ubl\PostalAddress(
+                Room: 'kapi no',
+                StreetName: 'cadde',
+                BuildingName: 'bina',
+                BuildingNumber: 'bina no',
+                CitySubdivisionName: 'mahalle',
+                CityName: 'şehir',
+                PostalZone: 'posta kodu',
+                Region: 'bölge',
+                Country: new Ahmeti\Ubl\Country(
+                    Name: 'Türkiye'
+                )
+            ),
+            PartyTaxScheme: new Ahmeti\Ubl\PartyTaxScheme(
+                TaxScheme: new Ahmeti\Ubl\TaxScheme(
+                    Name: 'Nilüfer'
+                )
+            ),
+            Contact: new Ahmeti\Ubl\Contact(
+                Telephone: 'telefon',
+                Telefax: 'faks',
+                ElectronicMail: 'mail adresi'
+            )
+        )
+    ),
+    AccountingCustomerParty: new Ahmeti\Ubl\AccountingCustomerParty(
+        Party: new Ahmeti\Ubl\Party(
+            WebsiteURI: 'https://ahmeti.com.tr',
+            PartyIdentification: new Ahmeti\Ubl\PartyIdentification(
+                ID: ['val' => '12345678901', 'attrs' => ['schemeID="VKN"']]
+            ),
+            PartyName: new Ahmeti\Ubl\PartyName(
+                Name: 'GIB'
+            ),
+            Person: new Ahmeti\Ubl\Person(
+                FirstName: 'ADI',
+                FamilyName: 'SOYADI'
+            ),
+            PostalAddress: new Ahmeti\Ubl\PostalAddress(
+                Room: 'kapi no',
+                StreetName: 'cadde',
+                BuildingName: 'bina',
+                BuildingNumber: 'bina no',
+                CitySubdivisionName: 'mahalle',
+                CityName: 'şehir',
+                PostalZone: 'posta kodu',
+                Region: 'asd',
+                Country: new Ahmeti\Ubl\Country(
+                    Name: 'Türkiye'
+                )
+            ),
+            PartyTaxScheme: new Ahmeti\Ubl\PartyTaxScheme(
+                TaxScheme: new Ahmeti\Ubl\TaxScheme(
+                    Name: 'Nilüfer'
+                )
+            ),
+            Contact: new Ahmeti\Ubl\Contact(
+                Telephone: 'telefon',
+                Telefax: 'faks',
+                ElectronicMail: 'mail adresi'
+            )
+        )
+    ),
+    AllowanceCharge: new Ahmeti\Ubl\AllowanceCharge(
+        ChargeIndicator: false,
+        Amount: ['val' => '0.01', 'attrs' => ['currencyID="TRY"']]
+    ),
+    TaxTotal: new Ahmeti\Ubl\TaxTotal(
+        TaxAmount: ['val' => '0.01', 'attrs' => ['currencyID="TRY"']],
+        TaxSubtotal: new Ahmeti\Ubl\TaxSubtotal(
+            TaxableAmount: ['val' => '0.99', 'attrs' => ['currencyID="TRY"']],
+            TaxAmount: ['val' => '0.01', 'attrs' => ['currencyID="TRY"']],
+            TaxCategory: new Ahmeti\Ubl\TaxCategory(
+                TaxScheme: new Ahmeti\Ubl\TaxScheme(
+                    Name: 'KDV',
+                    TaxTypeCode: '0015'
+                )
+            )
+        )
+    ),
+    LegalMonetaryTotal: new Ahmeti\Ubl\LegalMonetaryTotal(
+        LineExtensionAmount: ['val' => '1', 'attrs' => ['currencyID="TRY"']],
+        TaxExclusiveAmount: ['val' => '0.99', 'attrs' => ['currencyID="TRY"']],
+        TaxInclusiveAmount: ['val' => '1', 'attrs' => ['currencyID="TRY"']],
+        AllowanceTotalAmount: ['val' => '0.01', 'attrs' => ['currencyID="TRY"']],
+        PayableAmount: ['val' => '1', 'attrs' => ['currencyID="TRY"']]
+    ),
+    InvoiceLine: [
+        new Ahmeti\Ubl\InvoiceLine(
+            ID: '1',
+            InvoicedQuantity: ['val' => '1', 'attrs' => ['unitCode="CMT"']],
+            LineExtensionAmount: ['val' => '0.99', 'attrs' => ['currencyID="TRY"']],
+            AllowanceCharge: new Ahmeti\Ubl\AllowanceCharge(
+                ChargeIndicator: false,
+                MultiplierFactorNumeric: '0.01',
+                Amount: ['val' => '0.01', 'attrs' => ['currencyID="TRY"']],
+                BaseAmount: ['val' => '1', 'attrs' => ['currencyID="TRY"']],
+            ),
+            TaxTotal: new Ahmeti\Ubl\TaxTotal(
+                TaxAmount: ['val' => '0.01', 'attrs' => ['currencyID="TRY"']],
+                TaxSubtotal: new Ahmeti\Ubl\TaxSubtotal(
+                    TaxableAmount: ['val' => '0.99', 'attrs' => ['currencyID="TRY"']],
+                    TaxAmount: ['val' => '0.01', 'attrs' => ['currencyID="TRY"']],
+                    Percent: 18,
+                    TaxCategory: new Ahmeti\Ubl\TaxCategory(
+                        TaxScheme: new Ahmeti\Ubl\TaxScheme(
+                            Name: 'KDV',
+                            TaxTypeCode: '0015'
+                        )
+                    )
+                )
+            ),
+            Item: new Ahmeti\Ubl\Item(
+                Name: 'Test Ürün',
+                Description: 'Test Ürün Açıklaması',
+            ),
+            Price: new Ahmeti\Ubl\Price(
+                PriceAmount: ['val' => '1', 'attrs' => ['currencyID="TRY"']]
+            )
+        ),
+    ]
+);
 
-$uuid = \Bulut\eFaturaUBL\XMLHelper::CreateGUID();
-
-$invoice = new \Bulut\eFaturaUBL\Invoice();
-$invoice->UBLVersionID = "2.1"; //uluslararası fatura standardı 2.1
-$invoice->CustomizationID = "TR1.2"; //fakat GİB UBLTR olarak isimlendirdiği Türkiye'ye özgü 1.2 efatura formatını kullanıyor.
-$invoice->ProfileID = "TICARIFATURA"; //ticari ve temel olarak iki çeşittir. ticari faturalarda sistem yanıtı(application response) döner.
-#$invoice->ID = "FIT2017000000021"; //Eğer fatura ID FIT tarafından oluşacak ise, ID alanı boş, CUST_INV_ID alanı dolu gelmelidir. Eğer kullanıcı firma tarafından oluşacak ise, ID alanı dolu CUST_INV_ID alanı boş olarak gönderilmeli.
-$invoice->CopyIndicator = "false"; //kopyası mı, asıl süret mi olduğu belirlenir
-$invoice->UUID = $uuid; //fatura UUID
-$invoice->IssueDate = "FATURA_TARIHI"; //Y-m-d fatura tarihi
-$invoice->InvoiceTypeCode = "SATIS"; //gönderilecek fatura çeşidi, satış, iade vs.
-$invoice->Note = ["Test not"]; //isteğe bağlı not alanı
-$invoice->DocumentCurrencyCode = "TRY"; //efatura para birimi
-$invoice->LineCountNumeric = 1;  //fatura kalemlerinin sayısı
-
-//Fatura ID otomatik oluşacak ise bu alanı göndermelisiniz.
-$invoice_Document_Refence = new \Bulut\eFaturaUBL\DocumentReference();
-$invoice_Document_Refence->ID = \Bulut\eFaturaUBL\XMLHelper::CreateGUID();
-$invoice_Document_Refence->IssueDate = date('Y-m-d', strtotime($tarih));
-$invoice_Document_Refence->DocumentTypeCode = "CUST_INV_ID";
-$docRefences[] = $invoice_Document_Refence;
-
-
-$invoice->AdditionalDocumentReference = $docRefences;
-
-$invoice_AccountSupplierParty = new \Bulut\eFaturaUBL\AccountingSupplierParty();
-$invoice_AccountSupplierParty_Party = new \Bulut\eFaturaUBL\Party();
-$invoice_AccountSupplierParty_Party->WebsiteURI = "http://unlembilisim.com";
-
-$invoice_AccountSupplierParty_Party_Identifi = new \Bulut\eFaturaUBL\PartyIdentification();
-$invoice_AccountSupplierParty_Party_Identifi->ID = ['val'=> '12345678901', 'attrs' => ['schemeID="VKN"']];
-$invoice_AccountSupplierParty_Party->PartyIdentification = $invoice_AccountSupplierParty_Party_Identifi;
-
-$invoice_AccountSupplierParty_Party_Name = new \Bulut\eFaturaUBL\PartyName();
-$invoice_AccountSupplierParty_Party_Name->Name = "Orhan Gazi Başlı";
-$invoice_AccountSupplierParty_Party->PartyName = $invoice_AccountSupplierParty_Party_Name;
-
-$invoice_AccountSupplierParty_Party_Person = new \Bulut\eFaturaUBL\Person();
-$invoice_AccountSupplierParty_Party_Person->FirstName = "Orhan Gazi";
-$invoice_AccountSupplierParty_Party_Person->FamilyName = "Başlı";
-$invoice_AccountSupplierParty_Party->Person = $invoice_AccountSupplierParty_Party_Person;
-
-
-$invoice_AccountSupplierParty_Party_PostalAdd = new \Bulut\eFaturaUBL\PostalAddress();
-$invoice_AccountSupplierParty_Party_PostalAdd->Room = "kapi no";
-$invoice_AccountSupplierParty_Party_PostalAdd->StreetName = "cadde";
-$invoice_AccountSupplierParty_Party_PostalAdd->BuildingName = "bina";
-$invoice_AccountSupplierParty_Party_PostalAdd->BuildingNumber = "bina no";
-$invoice_AccountSupplierParty_Party_PostalAdd->CitySubdivisionName = "mahalle";
-$invoice_AccountSupplierParty_Party_PostalAdd->CityName = "şehir";
-$invoice_AccountSupplierParty_Party_PostalAdd->PostalZone = "posta kodu";
-$invoice_AccountSupplierParty_Party_PostalAdd->Region = "asd";
-
-$invoice_AccountSupplierParty_Party_PostalAdd_Country = new \Bulut\eFaturaUBL\Country();
-$invoice_AccountSupplierParty_Party_PostalAdd_Country->Name = "Türkiye";
-
-$invoice_AccountSupplierParty_Party_PostalAdd->Country = $invoice_AccountSupplierParty_Party_PostalAdd_Country;
-$invoice_AccountSupplierParty_Party->PostalAddress = $invoice_AccountSupplierParty_Party_PostalAdd;
-
-$invoice_AccountSupplierParty_Party_TaxSchema = new \Bulut\eFaturaUBL\PartyTaxScheme();
-$invoice_AccountSupplierParty_Party_TaxSchema_Schema = new \Bulut\eFaturaUBL\TaxScheme();
-$invoice_AccountSupplierParty_Party_TaxSchema_Schema->Name = "erciyes";
-$invoice_AccountSupplierParty_Party_TaxSchema->TaxScheme = $invoice_AccountSupplierParty_Party_TaxSchema_Schema;
-$invoice_AccountSupplierParty_Party->PartyTaxScheme = $invoice_AccountSupplierParty_Party_TaxSchema;
-
-$invoice_AccountSupplierParty_Party_Contact = new \Bulut\eFaturaUBL\Contact();
-$invoice_AccountSupplierParty_Party_Contact->Telephone = "telef";
-$invoice_AccountSupplierParty_Party_Contact->Telefax = "Telefax";
-$invoice_AccountSupplierParty_Party_Contact->ElectronicMail = "ElectronicMail";
-$invoice_AccountSupplierParty_Party->Contact = $invoice_AccountSupplierParty_Party_Contact;
-
-$invoice_AccountSupplierParty->Party = $invoice_AccountSupplierParty_Party;
-
-$invoice->AccountingSupplierParty = $invoice_AccountSupplierParty;
-
-
-// Customer
-$invoice_AccountCustomerParty = new \Bulut\eFaturaUBL\AccountingCustomerParty();
-$invoice_AccountCustomerParty_Party = new \Bulut\eFaturaUBL\Party();
-$invoice_AccountCustomerParty_Party->WebsiteURI = "http://unlembilisim.com";
-
-$invoice_AccountCustomerParty_Party_Identifi = new \Bulut\eFaturaUBL\PartyIdentification();
-$invoice_AccountCustomerParty_Party_Identifi->ID = ['val'=> "12345678901", 'attrs' => ['schemeID="VKN"']];
-$invoice_AccountCustomerParty_Party->PartyIdentification = $invoice_AccountCustomerParty_Party_Identifi;
-
-$invoice_AccountCustomerParty_Party_Name = new \Bulut\eFaturaUBL\PartyName();
-$invoice_AccountCustomerParty_Party_Name->Name = "GIB";
-$invoice_AccountCustomerParty_Party->PartyName = $invoice_AccountCustomerParty_Party_Name;
-
-// Müşteri eğer gerçek kişi (şahıs şirketi) ise adı ve soyadı gönderilir.
-$invoice_AccountCustomerParty_Party_Person = new \Bulut\eFaturaUBL\Person();
-$invoice_AccountCustomerParty_Party_Person->FirstName = "ADI";
-$invoice_AccountCustomerParty_Party_Person->FamilyName = "SOYADI";
-$invoice_AccountCustomerParty_Party->Person = $invoice_AccountCustomerParty_Party_Person;
-
-$invoice_AccountCustomerParty_Party_PostalAdd = new \Bulut\eFaturaUBL\PostalAddress();
-$invoice_AccountCustomerParty_Party_PostalAdd->Room = "kapi no";
-$invoice_AccountCustomerParty_Party_PostalAdd->StreetName = "cadde";
-$invoice_AccountCustomerParty_Party_PostalAdd->BuildingName = "bina";
-$invoice_AccountCustomerParty_Party_PostalAdd->BuildingNumber = "bina no";
-$invoice_AccountCustomerParty_Party_PostalAdd->CitySubdivisionName = "mahalle";
-$invoice_AccountCustomerParty_Party_PostalAdd->CityName = "şehir";
-$invoice_AccountCustomerParty_Party_PostalAdd->PostalZone = "posta kodu";
-$invoice_AccountCustomerParty_Party_PostalAdd->Region = "asd";
-
-$invoice_AccountCustomerParty_Party_PostalAdd_Country = new \Bulut\eFaturaUBL\Country();
-$invoice_AccountCustomerParty_Party_PostalAdd_Country->Name = "Türkiye";
-
-$invoice_AccountCustomerParty_Party_PostalAdd->Country = $invoice_AccountCustomerParty_Party_PostalAdd_Country;
-$invoice_AccountCustomerParty_Party->PostalAddress = $invoice_AccountCustomerParty_Party_PostalAdd;
-
-$invoice_AccountCustomerParty_Party_TaxSchema = new \Bulut\eFaturaUBL\PartyTaxScheme();
-$invoice_AccountCustomerParty_Party_TaxSchema_Schema = new \Bulut\eFaturaUBL\TaxScheme();
-$invoice_AccountCustomerParty_Party_TaxSchema_Schema->Name = "erciyes";
-$invoice_AccountCustomerParty_Party_TaxSchema->TaxScheme = $invoice_AccountCustomerParty_Party_TaxSchema_Schema;
-$invoice_AccountCustomerParty_Party->PartyTaxScheme = $invoice_AccountCustomerParty_Party_TaxSchema;
-
-$invoice_AccountCustomerParty_Party_Contact = new \Bulut\eFaturaUBL\Contact();
-$invoice_AccountCustomerParty_Party_Contact->Telephone = "telef";
-$invoice_AccountCustomerParty_Party_Contact->Telefax = "Telefax";
-$invoice_AccountCustomerParty_Party_Contact->ElectronicMail = "ElectronicMail";
-$invoice_AccountCustomerParty_Party->Contact = $invoice_AccountCustomerParty_Party_Contact;
-
-$invoice_AccountCustomerParty->Party = $invoice_AccountCustomerParty_Party;
-
-$invoice->AccountingCustomerParty= $invoice_AccountCustomerParty;
-
-$invoice_Allowence = new \Bulut\eFaturaUBL\AllowanceCharge();
-$invoice_Allowence->ChargeIndicator = "false";
-$invoice_Allowence->Amount = ["val" => "0.01", 'attrs' => ['currencyID="TRY"']];
-$invoice->AllowanceCharge = $invoice_Allowence;
-
-$invoice_TaxTotal = new \Bulut\eFaturaUBL\TaxTotal();
-$invoice_TaxTotal->TaxAmount = ["val" => "0.01", 'attrs' => ['currencyID="TRY"']];
-
-$invoice_TaxTotal_SubTotal = new \Bulut\eFaturaUBL\TaxSubtotal();
-$invoice_TaxTotal_SubTotal->TaxableAmount = ["val" => "0.99", 'attrs' => ['currencyID="TRY"']];
-$invoice_TaxTotal_SubTotal->TaxAmount = ["val" => "0.01", 'attrs' => ['currencyID="TRY"']];
-
-$invoice_TaxTotal_SubTotal_Category = new \Bulut\eFaturaUBL\TaxCategory();
-$invoice_TaxTotal_SubTotal_Category_Schema = new \Bulut\eFaturaUBL\TaxScheme();
-$invoice_TaxTotal_SubTotal_Category_Schema->Name = "KDV";
-$invoice_TaxTotal_SubTotal_Category_Schema->TaxTypeCode = "0015";
-
-$invoice_TaxTotal_SubTotal_Category->TaxScheme = $invoice_TaxTotal_SubTotal_Category_Schema;
-$invoice_TaxTotal_SubTotal->TaxCategory = $invoice_TaxTotal_SubTotal_Category;
-$invoice_TaxTotal->TaxSubtotal = $invoice_TaxTotal_SubTotal;
-
-$invoice->TaxTotal = $invoice_TaxTotal;
-
-$invoice_LegalMonetary = new \Bulut\eFaturaUBL\LegalMonetaryTotal();
-$invoice_LegalMonetary->LineExtensionAmount = ["val" => "1", 'attrs' => ['currencyID="TRY"']];
-$invoice_LegalMonetary->TaxExclusiveAmount = ["val" => "0.99", 'attrs' => ['currencyID="TRY"']];
-$invoice_LegalMonetary->TaxInclusiveAmount = ["val" => "1", 'attrs' => ['currencyID="TRY"']];
-$invoice_LegalMonetary->AllowanceTotalAmount = ["val" => "0.01", 'attrs' => ['currencyID="TRY"']];
-$invoice_LegalMonetary->PayableAmount = ["val" => "1", 'attrs' => ['currencyID="TRY"']];
-
-$invoice->LegalMonetaryTotal = $invoice_LegalMonetary;
-
-$invoice_line = new \Bulut\eFaturaUBL\InvoiceLine();
-$invoice_line->ID = "1";
-$invoice_line->InvoicedQuantity = ["val" => "1", 'attrs' => ['unitCode="CMT"']];
-$invoice_line->LineExtensionAmount = ["val" => "0.99", 'attrs' => ['currencyID="TRY"']];
-
-$invoice_line_allowence = new \Bulut\eFaturaUBL\AllowanceCharge();
-$invoice_line_allowence->ChargeIndicator = "false";
-$invoice_line_allowence->MultiplierFactorNumeric = "0.01";
-$invoice_line_allowence->Amount = ["val" => "0.01", 'attrs' => ['currencyID="TRY"']];
-$invoice_line_allowence->BaseAmount = ["val" => "1", 'attrs' => ['currencyID="TRY"']];
-$invoice_line->AllowanceCharge = $invoice_line_allowence;
-
-$invoice_line_taxtotal = new \Bulut\eFaturaUBL\TaxTotal();
-$invoice_line_taxtotal->TaxAmount = ["val" => "0.01", 'attrs' => ['currencyID="TRY"']];;
-
-$invoice_line_taxtotal_sub = new \Bulut\eFaturaUBL\TaxSubtotal();
-$invoice_line_taxtotal_sub->TaxableAmount = ["val" => "0.99", 'attrs' => ['currencyID="TRY"']];
-$invoice_line_taxtotal_sub->TaxAmount = ["val" => "0.01", 'attrs' => ['currencyID="TRY"']];
-$invoice_line_taxtotal_sub->Percent = "18";
-
-$invoice_line_taxtotal_sub_category = new \Bulut\eFaturaUBL\TaxCategory();
-$invoice_line_taxtotal_sub_category_schema = new \Bulut\eFaturaUBL\TaxScheme();
-$invoice_line_taxtotal_sub_category_schema->Name = "KDV";
-$invoice_line_taxtotal_sub_category_schema->TaxTypeCode = "0015";
-
-$invoice_line_taxtotal_sub_category->TaxScheme = $invoice_line_taxtotal_sub_category_schema;
-$invoice_line_taxtotal_sub->TaxCategory = $invoice_line_taxtotal_sub_category;
-
-$invoice_line_taxtotal->TaxSubtotal = $invoice_line_taxtotal_sub;
-$invoice_line->TaxTotal = $invoice_line_taxtotal;
-
-
-$invoice_line_item = new \Bulut\eFaturaUBL\Item();
-$invoice_line_item->Name = "Test Ürün";
-$invoice_line->Item = $invoice_line_item;
-
-$invoice_line_price = new \Bulut\eFaturaUBL\Price();
-$invoice_line_price->PriceAmount = ["val" => "1", 'attrs' => ['currencyID="TRY"']];
-$invoice_line->Price = $invoice_line_price;
-
-$invoice->InvoiceLine = [$invoice_line];
-
-$xml = new \Bulut\eFaturaUBL\XMLHelper($invoice);
+$xml = (new Ahmeti\Ubl\Utils\UblInvoice($invoice))->getXML();
 ```
-</details>
 
 ## E-Fatura Gönderme
 Aşağıda oluşturmuş olduğumuz XML (UBL) dosyası son senaryo olarak faturalaştırmak için Sovos servislerine göndermek için kullandığımız fonksiyon. Burada dikkat edilmesi gereken nokta. Zip dosyası oluşturup bu oluşturduğumuz ZIP dosyası ve fatura UUID aynı olmasıdır ve ZIP dosyasını BASE64 yapıp Sovosya gönderiyoruz ve cevabını alıyoruz.
@@ -424,20 +372,20 @@ Genel olarak dikkat etmemiz gerekenler Sovos ve GIB dökümanlarını inceleyere
 ```php
 $destination = 'temp/'.$uuid.'.zip';
 $zip = new ZipArchive();
-if($zip->open($destination,ZIPARCHIVE::CREATE) !== true) {
+if($zip->open($destination, ZIPARCHIVE::CREATE) !== true) {
     return false;
 }
-
-$zip->addFromString($uuid.'.xml', $xml->getInvoiceResponseXML());
+$zip->addFromString($uuid.'.xml', $xml);
 $zip->close();
 
+$sendUblRequest = new Ahmeti\Sovos\Invoice\SendUBL(
+    VKN_TCKN: 'GONDERICI_VKN_TCKN',
+    DocType: 'INVOICE',
+    ReceiverIdentifier: 'ALICI_PK',
+    SenderIdentifier: 'GONDERICI_GB',
+    DocData: base64_encode(file_get_contents($destination))
+);
 
-$sendUblRequest = new \Ahmeti\Sovos\InvoiceService\SendUBL();
-$sendUblRequest->setVKNTCKN("GONDERICI_VKN_TCKN");
-$sendUblRequest->setDocType("INVOICE"); // veya APP_RESP
-$sendUblRequest->setReceiverIdentifier("ALICI_PK");
-$sendUblRequest->setSenderIdentifier("GONDERICI_GB");
-$sendUblRequest->setDocData(base64_encode(file_get_contents($destination)));
 unlink($destination);
 
 $result = $service->SendUBLRequest($sendUblRequest);
@@ -447,7 +395,7 @@ $result = $service->SendUBLRequest($sendUblRequest);
 
 ```php
 
-$service = new \Ahmeti\Sovos\Api\ArchiveService(
+$service = new Ahmeti\Sovos\Api\ArchiveService(
     username: 'EARSIV_WS_Kullanici',
     password: 'EARSIV_WS_Sifre',
     test: true
@@ -459,7 +407,7 @@ $service = new \Ahmeti\Sovos\Api\ArchiveService(
 Kayıtlı kullanıcılar listesini ZIP olarak dönüş yapar.
 
 ```php
-$getDocument = new \Ahmeti\Sovos\Archive\GetUserList(
+$getDocument = new Ahmeti\Sovos\Archive\GetUserList(
     vknTckn: 'GONDERICI_VKN_TCKN',
 );
 
@@ -468,234 +416,174 @@ $result = $service->GetUserListRequest($getDocument);
 
 ## E-Arşiv Oluşturma
 Örnek E-Arşiv faturası oluşturmak için kullanılan parametre ve değişkenlerin açıklamaları için Sovos E-Arşiv dökümanına veya GIB dökümanına göz atabilirsiniz.
-<details>
-    <summary>Örneği incelemek için tıklayınız.</summary>
 
 ```php
-$docRefences = [];
+$invoice = new Ahmeti\Ubl\Invoice(
+    UBLVersionID: '2.1', // Uluslararası fatura standardı 2.1
+    CustomizationID: 'TR1.2', // GİB UBLTR olarak isimlendirdiği Türkiye'ye özgü 1.2 efatura formatını kullanıyor.
+    ProfileID: 'EARSIVFATURA',
+    ID: 'FA02017000000021', // Eğer fatura ID FIT tarafından oluşacak ise, ID alanı boş, CUST_INV_ID alanı dolu gelmelidir. Eğer kullanıcı firma tarafından oluşacak ise, ID alanı dolu CUST_INV_ID alanı boş olarak gönderilmeli.
+    CopyIndicator: false, // Kopyası mı, asıl süret mi olduğu belirlenir
+    UUID: '1d8e1b1b-4b3b-4e3f-8b1f-0e2f1b1b2c1d', // Fatura UUID
+    IssueDate: '2021-09-01', // Fatura tarihi
+    IssueTime: '10:00:00', // Fatura saati
+    InvoiceTypeCode: 'SATIS', // Gönderilecek fatura çeşidi, satış, iade vs.
+    DocumentCurrencyCode: 'TRY', // E-fatura para birimi
+    LineCountNumeric: 1, // Fatura kalemlerinin sayısı
+    Note: ['Test not'], // İsteğe bağlı not alanı
+    AdditionalDocumentReference: [
+        // Fatura ID otomatik oluşacak ise bu alanı göndermelisiniz.
+        new Ahmeti\Ubl\DocumentReference(
+            ID: '000000000000001', // ERP Fatura ID
+            IssueDate: '2021-09-01', // Fatura tarihi Y-m-d
+            DocumentTypeCode: 'CUST_INV_ID' // Fatura tipi
+        ),
+        new Ahmeti\Ubl\DocumentReference(
+            ID: '0100',
+            IssueDate: '2021-09-01',
+            DocumentTypeCode: 'OUTPUT_TYPE'
+        ),
+        new Ahmeti\Ubl\DocumentReference(
+            ID: 'KAGIT',
+            IssueDate: '2021-09-01',
+            DocumentTypeCode: 'EREPSENDT'
+        ),
+    ],
+    Signature: new Ahmeti\Ubl\Signature(
+        ID: ['val' => 'ALICI_VKN_TCKN', 'attrs' => ['schemeID = "VKN_TCKN"']],
+        SignatoryParty: new Ahmeti\Ubl\SignatoryParty(
+            PartyIdentification: new Ahmeti\Ubl\PartyIdentification(
+                ID: ['val' => 'ALICI_VKN_TCKN', 'attrs' => ['schemeID = "VKN"']]
+            ),
+            PostalAddress: new Ahmeti\Ubl\PostalAddress(
+                StreetName: 'deneme cad',
+                BuildingName: '01',
+                CitySubdivisionName: 'ilce',
+                CityName: 'il',
+                PostalZone: '34000',
+                Country: new Ahmeti\Ubl\Country(
+                    Name: 'TÜRKİYE'
+                )
+            )
+        ),
+        DigitalSignatureAttachment: new Ahmeti\Ubl\DigitalSignatureAttachment(
+            ExternalReference: new Ahmeti\Ubl\ExternalReference(
+                URI: '#Signature'
+            )
+        )
+    ),
+    AccountingSupplierParty: new Ahmeti\Ubl\AccountingSupplierParty(
+        Party: new Ahmeti\Ubl\Party(
+            WebsiteURI: 'https://ahmeti.com.tr',
+            PartyIdentification: new Ahmeti\Ubl\PartyIdentification(
+                ID: ['val' => 'GONDERICI_VKN_TCKN', 'attrs' => ['schemeID="TCKN"']]
+            ),
+            PartyName: new Ahmeti\Ubl\PartyName(
+                Name: 'Ahmet İmamoğlu'
+            ),
+            Person: new Ahmeti\Ubl\Person(
+                FirstName: 'Ahmet',
+                FamilyName: 'İmamoğlu'
+            ),
+            PostalAddress: new Ahmeti\Ubl\PostalAddress(
+                Room: 'kapi no',
+                StreetName: 'cadde',
+                BuildingName: 'bina',
+                BuildingNumber: 'bina no',
+                CitySubdivisionName: 'mahalle',
+                CityName: 'şehir',
+                PostalZone: 'posta kodu',
+                Region: 'asd',
+                Country: new Ahmeti\Ubl\Country(
+                    Name: 'Türkiye'
+                )
+            ),
+            PartyTaxScheme: new Ahmeti\Ubl\PartyTaxScheme(
+                TaxScheme: new Ahmeti\Ubl\TaxScheme(
+                    Name: 'Nilüfer'
+                )
+            ),
+            Contact: new Ahmeti\Ubl\Contact(
+                Telephone: 'telefon',
+                Telefax: 'faks',
+                ElectronicMail: 'mail adresi'
+            )
+        )
+    ),
+    AccountingCustomerParty: new Ahmeti\Ubl\AccountingCustomerParty(
+        Party: new Ahmeti\Ubl\Party(
+            WebsiteURI: 'http://unlembilisim.com',
+            PartyIdentification: new Ahmeti\Ubl\PartyIdentification(
+                ID: ['val' => 'ALICI_VKN_TCKN', 'attrs' => ['schemeID="TCKN"']]
+            ),
+            PartyName: new Ahmeti\Ubl\PartyName(
+                Name: 'ALICI UNVANI'
+            ),
+            Person: new Ahmeti\Ubl\Person(
+                FirstName: 'ALICI ADI',
+                FamilyName: 'ALICI SOYADI'
+            ),
+            PostalAddress: new Ahmeti\Ubl\PostalAddress(
+                Room: 'kapi no',
+                StreetName: 'cadde',
+                BuildingName: 'bina',
+                BuildingNumber: 'bina no',
+                CitySubdivisionName: 'mahalle',
+                CityName: 'şehir',
+                PostalZone: 'posta kodu',
+                Region: 'asd',
+                Country: new Ahmeti\Ubl\Country(
+                    Name: 'Türkiye'
+                )
+            ),
+            PartyTaxScheme: new Ahmeti\Ubl\PartyTaxScheme(
+                TaxScheme: new Ahmeti\Ubl\TaxScheme(
+                    Name: 'Nilüfer'
+                )
+            ),
+            Contact: new Ahmeti\Ubl\Contact(
+                Telephone: 'telefon',
+                Telefax: 'faks',
+                ElectronicMail: 'mail adresi'
+            )
+        )
+    ),
+    TaxTotal: new Ahmeti\Ubl\TaxTotal(
+        TaxAmount: ['val' => '0.01', 'attrs' => ['currencyID="TRY"']],
+        TaxSubtotal: new Ahmeti\Ubl\TaxSubtotal(
+            TaxableAmount: ['val' => '0.99', 'attrs' => ['currencyID="TRY"']],
+            TaxAmount: ['val' => '0.01', 'attrs' => ['currencyID="TRY"']],
+            TaxCategory: new Ahmeti\Ubl\TaxCategory(
+                TaxScheme: new Ahmeti\Ubl\TaxScheme(
+                    Name: 'KDV',
+                    TaxTypeCode: '0015'
+                )
+            )
+        )
+    ),
+    LegalMonetaryTotal: new Ahmeti\Ubl\LegalMonetaryTotal(
+        LineExtensionAmount: ['val' => '1', 'attrs' => ['currencyID="TRY"']],
+        TaxExclusiveAmount: ['val' => '0.99', 'attrs' => ['currencyID="TRY"']],
+        TaxInclusiveAmount: ['val' => '1', 'attrs' => ['currencyID="TRY"']],
+        PayableAmount: ['val' => '1', 'attrs' => ['currencyID="TRY"']]
+    ),
+    InvoiceLine: [
+        new Ahmeti\Ubl\InvoiceLine(
+            ID: '1',
+            InvoicedQuantity: ['val' => '1', 'attrs' => ['unitCode="CMT"']],
+            LineExtensionAmount: ['val' => '0.99', 'attrs' => ['currencyID="TRY"']],
+            Item: new Ahmeti\Ubl\Item(
+                Name: 'Test Ürün'
+            ),
+            Price: new Ahmeti\Ubl\Price(
+                PriceAmount: ['val' => '1', 'attrs' => ['currencyID="TRY"']]
+            )
+        ),
+    ]
+);
 
-$uuid = \Bulut\eFaturaUBL\XMLHelper::CreateGUID();
-
-$invoice = new \Bulut\eFaturaUBL\Invoice();
-$invoice->UBLVersionID = "2.1"; //uluslararası fatura standardı 2.1
-$invoice->CustomizationID = "TR1.2"; //fakat GİB UBLTR olarak isimlendirdiği Türkiye'ye özgü 1.2 efatura formatını kullanıyor.
-$invoice->ProfileID = "EARSIVFATURA"; //ticari ve temel olarak iki çeşittir. ticari faturalarda sistem yanıtı(application response) döner.
-$invoice->ID = "FA02017000000021"; //Eğer fatura ID FIT tarafından oluşacak ise, ID alanı boş, CUST_INV_ID alanı dolu gelmelidir. Eğer kullanıcı firma tarafından oluşacak ise, ID alanı dolu CUST_INV_ID alanı boş olarak gönderilmeli.
-$invoice->CopyIndicator = "false"; //kopyası mı, asıl süret mi olduğu belirlenir
-$invoice->UUID = $uuid; //fatura UUID
-$invoice->IssueDate = "Y-m-d"; //fatura tarihi
-$invoice->IssueTime = date('H:i:s');
-$invoice->InvoiceTypeCode = "SATIS"; //gönderilecek fatura çeşidi, satış, iade vs.
-$invoice->DocumentCurrencyCode = "TRY"; //efatura para birimi
-$invoice->LineCountNumeric = 1;  //fatura kalemlerinin sayısı
-#$invoice->Note = ["Test not"]; //isteğe bağlı not alanı
-
-//Fatura ID otomatik oluşacak ise bu alanı göndermelisiniz.
-$invoice_Document_Refence = new \Bulut\eFaturaUBL\DocumentReference();
-$invoice_Document_Refence->ID = \Bulut\eFaturaUBL\XMLHelper::CreateGUID();
-$invoice_Document_Refence->IssueDate = "Y-m-d";
-$invoice_Document_Refence->DocumentTypeCode = "CUST_INV_ID";
-$docRefences[] = $invoice_Document_Refence;
-
-
-//OUTPUT_TYPE
-$invoice_Document_Refence1 = new \Bulut\eFaturaUBL\DocumentReference();
-$invoice_Document_Refence1->ID = "0100";
-$invoice_Document_Refence1->IssueDate = date('Y-m-d');
-$invoice_Document_Refence1->DocumentTypeCode = "OUTPUT_TYPE";
-$docRefences[] = $invoice_Document_Refence1;
-
-
-//EREPSENDT
-$invoice_Document_Refence2 = new \Bulut\eFaturaUBL\DocumentReference();
-$invoice_Document_Refence2->ID = "KAGIT";
-$invoice_Document_Refence2->IssueDate = date('Y-m-d');
-$invoice_Document_Refence2->DocumentTypeCode = "EREPSENDT";
-$docRefences[] = $invoice_Document_Refence2;
-
-
-$invoice->AdditionalDocumentReference = $docRefences;
-
-$invoice_signature = new \Bulut\eFaturaUBL\Signature();
-$invoice_signature->ID = ['val' => "ALICI_VKN_TCKN", 'attrs' => ['schemeID = "VKN_TCKN"']];
-
-$invoice_signature_party = new \Bulut\eFaturaUBL\SignatoryParty();
-
-$invoice__signature_party_ident = new \Bulut\eFaturaUBL\PartyIdentification();
-$invoice__signature_party_ident->ID = ['val' => "ALICI_VKN_TCKN", 'attrs' => ['schemeID = "VKN"']];
-$invoice_signature_party->PartyIdentification = $invoice__signature_party_ident;
-
-$invoice__signature_party_postal = new \Bulut\eFaturaUBL\PostalAddress();
-$invoice__signature_party_postal->StreetName = "deneme cad";
-$invoice__signature_party_postal->BuildingName = "01";
-$invoice__signature_party_postal->CitySubdivisionName = "ilce";
-$invoice__signature_party_postal->CityName = "il";
-$invoice__signature_party_postal->PostalZone = "34000";
-
-$invoice__signature_party_postal_country = new \Bulut\eFaturaUBL\Country();
-$invoice__signature_party_postal_country->Name = "TÜRKİYE";
-$invoice__signature_party_postal->Country = $invoice__signature_party_postal_country;
-
-$invoice_signature_party->PostalAddress = $invoice__signature_party_postal;
-$invoice_signature->SignatoryParty = $invoice_signature_party;
-
-$invoice_signature_digital = new \Bulut\eFaturaUBL\DigitalSignatureAttachment();
-$invoice_signature_digital_ext = new \Bulut\eFaturaUBL\ExternalReference();
-$invoice_signature_digital_ext->URI = "#Signature";
-$invoice_signature_digital->ExternalReference = $invoice_signature_digital_ext;
-
-$invoice_signature->DigitalSignatureAttachment = $invoice_signature_digital;
-
-$invoice->Signature = $invoice_signature;
-
-
-$invoice_AccountSupplierParty = new \Bulut\eFaturaUBL\AccountingSupplierParty();
-$invoice_AccountSupplierParty_Party = new \Bulut\eFaturaUBL\Party();
-$invoice_AccountSupplierParty_Party->WebsiteURI = "http://unlembilisim.com";
-
-$invoice_AccountSupplierParty_Party_Identifi = new \Bulut\eFaturaUBL\PartyIdentification();
-$invoice_AccountSupplierParty_Party_Identifi->ID = ['val'=> "GONDERICI_VKN_TCKN", 'attrs' => ['schemeID="TCKN"']];
-$invoice_AccountSupplierParty_Party->PartyIdentification = $invoice_AccountSupplierParty_Party_Identifi;
-
-$invoice_AccountSupplierParty_Party_Name = new \Bulut\eFaturaUBL\PartyName();
-$invoice_AccountSupplierParty_Party_Name->Name = "Orhan Gazi Başlı";
-$invoice_AccountSupplierParty_Party->PartyName = $invoice_AccountSupplierParty_Party_Name;
-
-$invoice_AccountSupplierParty_Party_Person = new \Bulut\eFaturaUBL\Person();
-$invoice_AccountSupplierParty_Party_Person->FirstName = "Orhan Gazi";
-$invoice_AccountSupplierParty_Party_Person->FamilyName = "Başlı";
-$invoice_AccountSupplierParty_Party->Person = $invoice_AccountSupplierParty_Party_Person;
-
-
-$invoice_AccountSupplierParty_Party_PostalAdd = new \Bulut\eFaturaUBL\PostalAddress();
-$invoice_AccountSupplierParty_Party_PostalAdd->Room = "kapi no";
-$invoice_AccountSupplierParty_Party_PostalAdd->StreetName = "cadde";
-$invoice_AccountSupplierParty_Party_PostalAdd->BuildingName = "bina";
-$invoice_AccountSupplierParty_Party_PostalAdd->BuildingNumber = "bina no";
-$invoice_AccountSupplierParty_Party_PostalAdd->CitySubdivisionName = "mahalle";
-$invoice_AccountSupplierParty_Party_PostalAdd->CityName = "şehir";
-$invoice_AccountSupplierParty_Party_PostalAdd->PostalZone = "posta kodu";
-$invoice_AccountSupplierParty_Party_PostalAdd->Region = "asd";
-
-$invoice_AccountSupplierParty_Party_PostalAdd_Country = new \Bulut\eFaturaUBL\Country();
-$invoice_AccountSupplierParty_Party_PostalAdd_Country->Name = "Türkiye";
-
-$invoice_AccountSupplierParty_Party_PostalAdd->Country = $invoice_AccountSupplierParty_Party_PostalAdd_Country;
-$invoice_AccountSupplierParty_Party->PostalAddress = $invoice_AccountSupplierParty_Party_PostalAdd;
-
-$invoice_AccountSupplierParty_Party_TaxSchema = new \Bulut\eFaturaUBL\PartyTaxScheme();
-$invoice_AccountSupplierParty_Party_TaxSchema_Schema = new \Bulut\eFaturaUBL\TaxScheme();
-$invoice_AccountSupplierParty_Party_TaxSchema_Schema->Name = "erciyes";
-$invoice_AccountSupplierParty_Party_TaxSchema->TaxScheme = $invoice_AccountSupplierParty_Party_TaxSchema_Schema;
-$invoice_AccountSupplierParty_Party->PartyTaxScheme = $invoice_AccountSupplierParty_Party_TaxSchema;
-
-$invoice_AccountSupplierParty_Party_Contact = new \Bulut\eFaturaUBL\Contact();
-$invoice_AccountSupplierParty_Party_Contact->Telephone = "telef";
-$invoice_AccountSupplierParty_Party_Contact->Telefax = "Telefax";
-$invoice_AccountSupplierParty_Party_Contact->ElectronicMail = "ElectronicMail";
-$invoice_AccountSupplierParty_Party->Contact = $invoice_AccountSupplierParty_Party_Contact;
-
-$invoice_AccountSupplierParty->Party = $invoice_AccountSupplierParty_Party;
-
-$invoice->AccountingSupplierParty = $invoice_AccountSupplierParty;
-
-
-// Customer
-$invoice_AccountCustomerParty = new \Bulut\eFaturaUBL\AccountingCustomerParty();
-$invoice_AccountCustomerParty_Party = new \Bulut\eFaturaUBL\Party();
-$invoice_AccountCustomerParty_Party->WebsiteURI = "http://unlembilisim.com";
-
-$invoice_AccountCustomerParty_Party_Identifi = new \Bulut\eFaturaUBL\PartyIdentification();
-$invoice_AccountCustomerParty_Party_Identifi->ID = ['val'=> $aliciVkn, 'attrs' => ['schemeID="TCKN"']];
-$invoice_AccountCustomerParty_Party->PartyIdentification = $invoice_AccountCustomerParty_Party_Identifi;
-
-$invoice_AccountCustomerParty_Party_Name = new \Bulut\eFaturaUBL\PartyName();
-$invoice_AccountCustomerParty_Party_Name->Name = "GIB";
-$invoice_AccountCustomerParty_Party->PartyName = $invoice_AccountCustomerParty_Party_Name;
-
-$invoice_AccountCustomerParty_Party_Person = new \Bulut\eFaturaUBL\Person();
-$invoice_AccountCustomerParty_Party_Person->FirstName = "Test";
-$invoice_AccountCustomerParty_Party_Person->FamilyName = "Test";
-$invoice_AccountCustomerParty_Party->Person = $invoice_AccountCustomerParty_Party_Person;
-
-
-$invoice_AccountCustomerParty_Party_PostalAdd = new \Bulut\eFaturaUBL\PostalAddress();
-$invoice_AccountCustomerParty_Party_PostalAdd->Room = "kapi no";
-$invoice_AccountCustomerParty_Party_PostalAdd->StreetName = "cadde";
-$invoice_AccountCustomerParty_Party_PostalAdd->BuildingName = "bina";
-$invoice_AccountCustomerParty_Party_PostalAdd->BuildingNumber = "bina no";
-$invoice_AccountCustomerParty_Party_PostalAdd->CitySubdivisionName = "mahalle";
-$invoice_AccountCustomerParty_Party_PostalAdd->CityName = "şehir";
-$invoice_AccountCustomerParty_Party_PostalAdd->PostalZone = "posta kodu";
-$invoice_AccountCustomerParty_Party_PostalAdd->Region = "asd";
-
-$invoice_AccountCustomerParty_Party_PostalAdd_Country = new \Bulut\eFaturaUBL\Country();
-$invoice_AccountCustomerParty_Party_PostalAdd_Country->Name = "Türkiye";
-
-$invoice_AccountCustomerParty_Party_PostalAdd->Country = $invoice_AccountCustomerParty_Party_PostalAdd_Country;
-$invoice_AccountCustomerParty_Party->PostalAddress = $invoice_AccountCustomerParty_Party_PostalAdd;
-
-$invoice_AccountCustomerParty_Party_TaxSchema = new \Bulut\eFaturaUBL\PartyTaxScheme();
-$invoice_AccountCustomerParty_Party_TaxSchema_Schema = new \Bulut\eFaturaUBL\TaxScheme();
-$invoice_AccountCustomerParty_Party_TaxSchema_Schema->Name = "erciyes";
-$invoice_AccountCustomerParty_Party_TaxSchema->TaxScheme = $invoice_AccountCustomerParty_Party_TaxSchema_Schema;
-$invoice_AccountCustomerParty_Party->PartyTaxScheme = $invoice_AccountCustomerParty_Party_TaxSchema;
-
-$invoice_AccountCustomerParty_Party_Contact = new \Bulut\eFaturaUBL\Contact();
-$invoice_AccountCustomerParty_Party_Contact->Telephone = "telef";
-$invoice_AccountCustomerParty_Party_Contact->Telefax = "Telefax";
-$invoice_AccountCustomerParty_Party_Contact->ElectronicMail = "ElectronicMail";
-$invoice_AccountCustomerParty_Party->Contact = $invoice_AccountCustomerParty_Party_Contact;
-
-$invoice_AccountCustomerParty->Party = $invoice_AccountCustomerParty_Party;
-
-$invoice->AccountingCustomerParty= $invoice_AccountCustomerParty;
-
-$invoice_TaxTotal = new \Bulut\eFaturaUBL\TaxTotal();
-$invoice_TaxTotal->TaxAmount = ["val" => "0.01", 'attrs' => ['currencyID="TRY"']];
-
-$invoice_TaxTotal_SubTotal = new \Bulut\eFaturaUBL\TaxSubtotal();
-$invoice_TaxTotal_SubTotal->TaxableAmount = ["val" => "0.99", 'attrs' => ['currencyID="TRY"']];
-$invoice_TaxTotal_SubTotal->TaxAmount = ["val" => "0.01", 'attrs' => ['currencyID="TRY"']];
-
-$invoice_TaxTotal_SubTotal_Category = new \Bulut\eFaturaUBL\TaxCategory();
-$invoice_TaxTotal_SubTotal_Category_Schema = new \Bulut\eFaturaUBL\TaxScheme();
-$invoice_TaxTotal_SubTotal_Category_Schema->Name = "KDV";
-$invoice_TaxTotal_SubTotal_Category_Schema->TaxTypeCode = "0015";
-
-$invoice_TaxTotal_SubTotal_Category->TaxScheme = $invoice_TaxTotal_SubTotal_Category_Schema;
-$invoice_TaxTotal_SubTotal->TaxCategory = $invoice_TaxTotal_SubTotal_Category;
-$invoice_TaxTotal->TaxSubtotal = $invoice_TaxTotal_SubTotal;
-
-$invoice->TaxTotal = $invoice_TaxTotal;
-
-$invoice_LegalMonetary = new \Bulut\eFaturaUBL\LegalMonetaryTotal();
-$invoice_LegalMonetary->LineExtensionAmount = ["val" => "1", 'attrs' => ['currencyID="TRY"']];
-$invoice_LegalMonetary->TaxExclusiveAmount = ["val" => "0.99", 'attrs' => ['currencyID="TRY"']];
-$invoice_LegalMonetary->TaxInclusiveAmount = ["val" => "1", 'attrs' => ['currencyID="TRY"']];
-$invoice_LegalMonetary->PayableAmount = ["val" => "1", 'attrs' => ['currencyID="TRY"']];
-
-$invoice->LegalMonetaryTotal = $invoice_LegalMonetary;
-
-$invoice_line = new \Bulut\eFaturaUBL\InvoiceLine();
-$invoice_line->ID = "1";
-$invoice_line->InvoicedQuantity = ["val" => "1", 'attrs' => ['unitCode="CMT"']];
-$invoice_line->LineExtensionAmount = ["val" => "0.99", 'attrs' => ['currencyID="TRY"']];
-
-
-$invoice_line_item = new \Bulut\eFaturaUBL\Item();
-$invoice_line_item->Name = "Test Ürün";
-$invoice_line->Item = $invoice_line_item;
-
-$invoice_line_price = new \Bulut\eFaturaUBL\Price();
-$invoice_line_price->PriceAmount = ["val" => "1", 'attrs' => ['currencyID="TRY"']];
-$invoice_line->Price = $invoice_line_price;
-
-$invoice->InvoiceLine = [$invoice_line];
-
-$xml = new \Bulut\eFaturaUBL\XMLHelper($invoice);
+$xml = (new Ahmeti\Ubl\Utils\UblInvoice($invoice))->getXML();
 ```
-</details>
 
 ## E-Arşiv Gönderme
 Oluşturmuş olduğumuz E-Arşiv XML'ini Sovos sistemlerine göndermek için kullandığımız fonksiyon.
@@ -704,26 +592,25 @@ Oluşturmuş olduğumuz E-Arşiv XML'ini Sovos sistemlerine göndermek için kul
 $destination = 'temp/'.$rand.'.zip';
 $rand = rand(1000,9999);
 $zip = new ZipArchive();
-if($zip->open($destination,ZIPARCHIVE::CREATE) !== true) {
+if($zip->open($destination, ZIPARCHIVE::CREATE) !== true) {
     return false;
 }
-
 $zip->addFromString($uuid.'.xml', $xml);
 $zip->close();
 
-$sendUblRequest = new \Ahmeti\Sovos\Archive\SendInvoice(
+$sendUblRequest = new Ahmeti\Sovos\Archive\SendInvoice(
     senderID: 'GONDERICI_VKN_TCKN',
     hash: md5_file($destination),
     fileName: $rand.'.zip',
     docType: 'XML',
     binaryData: base64_encode(file_get_contents($destination)),
-    customizationParams: [new \Ahmeti\Sovos\Archive\CustomizationParam(
+    customizationParams: [new Ahmeti\Sovos\Archive\CustomizationParam(
         paramName: 'BRANCH',
         paramValue: 'default'
     )],
-    responsiveOutput: new \Ahmeti\Sovos\Archive\responsiveOutput(
+    responsiveOutput: new Ahmeti\Sovos\Archive\responsiveOutput(
         outputType: 'PDF'
-    ) 
+    )
 );
 
 $result = $service->SendInvoiceRequest($sendUblRequest);
@@ -734,27 +621,25 @@ Detaylar için Sovos E-Arşiv dökümanını inceleyebilirsiniz.
 
 ```php
 $destination = 'temp/'.$rand.'.zip';
-$rand = rand(1000,9999);
-$zip = new ZipArchive();
-if($zip->open($destination,ZIPARCHIVE::CREATE) !== true) {
+$rand = rand(1000, 9999);
+$zip = new ZipArchive;
+if ($zip->open($destination, ZIPARCHIVE::CREATE) !== true) {
     return false;
 }
-
 $zip->addFromString($uuid.'.xml', $xml);
 $zip->close();
 
-
-$sendUblRequest = new \Ahmeti\Sovos\ArchiveService\SendEnvelope();
-$sendUblRequest->setSenderID("GONDERICI_VKN_TCKN");
-$sendUblRequest->setHash(md5_file($destination));
-$sendUblRequest->setFileName($rand.'.zip');
-$sendUblRequest->setDocType("XML");
-$sendUblRequest->setBinaryData(base64_encode(file_get_contents($destination)));
-
-$custParam = new \Ahmeti\Sovos\ArchiveService\CustomizationParam();
-$custParam->paramName = "BRANCH";
-$custParam->paramValue = "default";
-$sendUblRequest->setCustomizationParams([$custParam]);
+$sendUblRequest = new Ahmeti\Sovos\Archive\SendEnvelope(
+    senderID: 'GONDERICI_VKN_TCKN',
+    hash: md5_file($destination),
+    fileName: $rand.'.zip',
+    docType: 'XML',
+    binaryData: base64_encode(file_get_contents($destination)),
+    customizationParams: [new Ahmeti\Sovos\Archive\CustomizationParam(
+        paramName: 'BRANCH',
+        paramValue: 'default',
+    )]
+);
 
 $result = $service->SendEnvelopeRequest($sendUblRequest);
 ```
@@ -763,68 +648,65 @@ $result = $service->SendEnvelopeRequest($sendUblRequest);
 Gerekli alanları doldurarak faturayı iptal edebiliriz. Değişkenleri Sovos dökümanından kontrol edebilirsiniz.
 
 ```php
-$getDocument = new \Ahmeti\Sovos\ArchiveService\InvoiceCancelInfoTypeList();
+$cancelInvoice = new Ahmeti\Sovos\Archive\CancelInvoice(
+    invoiceCancelInfoTypeList: [new Ahmeti\Sovos\Archive\InvoiceCancelInfoTypeList(
+        invoiceId: 'INVOICE_NUMBER',
+        vkn: 'GONDERICI_VKN',
+        branch: 'GONDEREN_SUBE',
+        totalAmount: 'FATURA_TUTARI',
+        cancelDate: 'Y-m-d',
+        custInvID: 'CUST_INV_ID'
+    )]
+);
 
-$getDocument->setInvoiceId("INVOICE_NUMBER");
-$getDocument->setVkn("GONDERICI_VKN");
-$getDocument->setBranch("GONDEREN_SUBE");
-$getDocument->setTotalAmount("FATURA_TUTARI");
-$getDocument->setCancelDate("Y-m-d");
-$getDocument->setCustInvID("CUST_INV_ID");
-
-$cancelService = new \Ahmeti\Sovos\ArchiveService\CancelInvoice();
-$cancelService->setInvoiceCancelInfoTypeList([$getDocument]);
-$resutl = $service->CancelInvoiceRequest($cancelService);
+$resutl = $service->CancelInvoiceRequest($cancelInvoice);
 ```
 
 ## E-Arşiv Tekrar Tetikleme
 Gönderilmiş bir faturayı tekrar iletmek için kullanılan fonksiyon CustomParameters için Sovos dökümanlarına göz atınız.
 
 ```php
-$getDocument = new \Ahmeti\Sovos\ArchiveService\RetriggerOperation();
-$getDocument->setVKN("GONDERICI_VKN_TCKN");
-$getDocument->setBranch("GONDERICI_SUBE");
-$getDocument->setInvoiceID("FATURA_NUMARASI");
-$getDocument->setInvoiceUUID("FATURA_UUID");
+$retriggerOperation = new Ahmeti\Sovos\Archive\RetriggerOperation(
+    VKN: 'GONDERICI_VKN_TCKN',
+    branch: 'GONDERICI_SUBE',
+    invoiceID: 'FATURA_NUMARASI',
+    invoiceUUID: 'FATURA_UUID',
+    customizationParams: [
+        new Ahmeti\Sovos\Archive\CustomizationParam(
+            paramName: '',
+            paramValue: ''
+        )
+    ]
+);
 
-$cust = [];
-$customParams = [];
-foreach($customParams as $key => $val){
-    $name = $val;
-    if($name != ""){
-        $custObj = new \Ahmeti\Sovos\ArchiveService\CustomizationParam();
-        $custObj->paramName = $name;
-        $custObj->paramValue = $_POST['paramValue'][$key];
-        $cust[] = $custObj;
-    }
-}
-$getDocument->setCustomizationParams($cust);
-$result = $service->GetRetriggerOperationRequest($getDocument);
+$result = $service->GetRetriggerOperationRequest($retriggerOperation);
 ```
 
 ## E-Arşiv İndirme
 Fonksiyonu tetikleyerek göndermiş olduğunuz faturanın görselini indirebilirsiniz.
 
 ```php
-$getDocument = new \Ahmeti\Sovos\ArchiveService\GetInvoiceDocument();
-$getDocument->setUUID("FATURA_UUID");
-$getDocument->setVkn("GONDERICI_VKN");
-$getDocument->setInvoiceNumber("FATURA_NUMARASI");
-$getDocument->setCustInvId("CUST_INV_ID");
-$getDocument->setOutputType("CIKTI_TURU"); // XML, UBL
+$invoice = new Ahmeti\Sovos\Archive\GetInvoiceDocument(
+    UUID: 'FATURA_UUID',
+    vkn: 'GONDERICI_VKN',
+    invoiceNumber: 'FATURA_NUMARASI',
+    custInvId: 'CUST_INV_ID',
+    outputType: 'CIKTI_TURU' // XML, UBL
+);
 
-$result = $service->GetInvoiceDocumentRequest($getDocument);
+$result = $service->GetInvoiceDocumentRequest($invoice);
 ```
 
 ## E-Arşiv İmzalama
 Fonksiyonu tetikleyerek imzalama işlemi gerçekleştirebilirsiniz. SDK'da kullanılan tüm fonksiyon ve değişken isimleri Sovos ve GIB sistemine uygundur. Sovos ve GIB dökümanlarını inceleyerek kolaylıkla entegrasyon sağlayabilirsiniz.
 
 ```php
-$getDocument = new \Ahmeti\Sovos\ArchiveService\GetSignedInvoice();
-$getDocument->setUUID("FATURA_UUID");
-$getDocument->setVkn("GONDERICI_VKN");
-$getDocument->setInvoiceNumber("FATURA_NUMARASI");
-$getDocument->setCustInvId("CUST_INV_ID");
+$getDocument = new Ahmeti\Sovos\Archive\GetSignedInvoice(
+    UUID: 'FATURA_UUID',
+    vkn: 'GONDERICI_VKN',
+    invoiceNumber: 'FATURA_NUMARASI',
+    custInvID: 'CUST_INV_ID'
+);
 
 $resutl = $service->GetSignedInvoiceRequest($getDocument);
 ```
