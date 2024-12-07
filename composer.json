@@ -5,14 +5,14 @@
     "license": "MIT",
     "authors": [
         {
+            "name": "Ahmet Imamoglu",
+            "email": "ahmet@ahmeti.com.tr",
+            "homepage": "https://ahmeti.com.tr"
+        },
+        {
             "name": "Orhan Gazi Başlı",
             "email": "obasli@unlembilisim.com",
             "homepage": "http://unlembilisim.com/"
-        },
-        {
-            "name": "Ahmet Imamoglu",
-            "email": "ahmet363@gmail.com",
-            "homepage": "https://ahmeti.com.tr"
         }
     ],
     "require": {
@@ -21,16 +21,12 @@
         "ahmeti/ubl": "^2.0"
     },
     "require-dev": {
-        "laravel/pint": "^1.10"
+        "laravel/pint": "^1.10",
+        "phpstan/phpstan": "^2.0"
     },
     "autoload": {
         "psr-4": {
-            "Bulut\\FITApi\\": "src/Bulut/FITApi/",
-            "Bulut\\InvoiceService\\": "src/Bulut/InvoiceService/",
-            "Bulut\\ArchiveService\\": "src/Bulut/ArchiveService/",
-            "Bulut\\SMMService\\": "src/Bulut/SMMService/",
-            "Ahmeti\\Sovos\\Despatch\\": "src/Despatch/",
-            "Bulut\\Exceptions\\": "src/Bulut/Exceptions/"
+            "Ahmeti\\Sovos\\": "src"
         }
     },
     "minimum-stability": "stable",
