@@ -16,6 +16,6 @@ class SendInvoice
         public ?string $hash = null,
         public ?string $binaryData = null,
         public array $customizationParams = [],
-        public ?string $responsiveOutput = null
+        public ?responsiveOutput $responsiveOutput = null
     ) {}
 }
