@@ -20,7 +20,7 @@ class GetUblList
         public ?string $Type = null,
         public ?string $FromDate = null,
         public ?string $ToDate = null,
-        public ?string $FromDateSpecified = null,
-        public ?string $ToDateSpecified = null
+        public bool $FromDateSpecified = false,
+        public bool $ToDateSpecified = false
     ) {}
 }
