@@ -2,6 +2,11 @@
 
 namespace Ahmeti\Sovos\Api;
 
+use Ahmeti\Sovos\Archive\CancelInvoice;
+use Ahmeti\Sovos\Archive\GetInvoiceDocument;
+use Ahmeti\Sovos\Archive\GetSignedInvoice;
+use Ahmeti\Sovos\Archive\SendEnvelope;
+use Ahmeti\Sovos\Archive\SendInvoice;
 use Ahmeti\Sovos\Exceptions\GlobalException;
 use Ahmeti\Sovos\Exceptions\SchemaValidationException;
 use Ahmeti\Sovos\Exceptions\UnauthorizedException;
@@ -53,9 +58,30 @@ class Service
         $get_variables = get_object_vars($request);
         $methodName = $get_variables['methodName'];
         $soapAction = $get_variables['soapAction'];
+        $prefix = $get_variables['prefix'] ?? null;
+        $namespace = $get_variables['namespace'] ?? null;
         unset($get_variables['methodName']);
         unset($get_variables['soapAction']);
-        $xmlMake = $this->makeXml($methodName, $get_variables);
+        unset($get_variables['prefix']);
+        unset($get_variables['namespace']);
+        $xmlMake = $this->makeXml($methodName, $get_variables, $prefix, $namespace);
+
+        if (get_class($request) == CancelInvoice::class) {
+            $xmlMake = str_replace(['get:', ':get'], ['inv:', ':inv'], $xmlMake);
+        }
+        if (get_class($request) === SendInvoice::class) {
+            $xmlMake = str_replace(['get:', ':get'], ['inv:', ':inv'], $xmlMake);
+        }
+        if (get_class($request) === SendEnvelope::class) {
+            $xmlMake = str_replace(['get:', ':get'], ['inv:', ':inv'], $xmlMake);
+        }
+        if (get_class($request) === GetInvoiceDocument::class) {
+            $xmlMake = str_replace(['get:', 'xmlns:get'], ['inv:', 'xmlns:inv'], $xmlMake);
+        }
+        if (get_class($request) === GetSignedInvoice::class) {
+            $xmlMake = str_replace(['get:', 'xmlns:get'], ['inv:', 'xmlns:inv'], $xmlMake);
+        }
+
         $this->headers['SOAPAction'] = $soapAction;
         $this->headers['Content-Length'] = strlen($xmlMake);
         $response = $this->client->request('POST', $this->url, [
@@ -78,7 +104,29 @@ class Service
         return $object;
     }
 
-    protected function makeXml(string $methodName, array $variables): string
+    protected function xml2array(object $xmlObject, array &$out = []): array
+    {
+        foreach ((array) $xmlObject as $index => $node) {
+            $out[$index] = (is_object($node)) ? $this->xml2array($node) : $node;
+        }
+
+        return $out;
+    }
+
+    protected function makeSubXml(array|object $variables, string &$subXml, ?string $prefix = null, ?string $namespace = null): void
+    {
+        foreach ($variables as $key => $val) {
+            if (is_object($val)) {
+                $this->makeSubXml($val, $subXml, $prefix, $namespace);
+            } else {
+                if (strlen($val) > 0) {
+                    $subXml .= '<'.($prefix ? $this->soapSubClassPrefix.':' : '').$key.'>'.$val.'</'.($prefix ? $this->soapSubClassPrefix.':' : '').''.$key.'>';
+                }
+            }
+        }
+    }
+
+    protected function makeXml(string $methodName, array $variables, ?string $prefix = null, ?string $namespace = null): string
     {
         $subXml = '';
         foreach ($variables as $key => $val) {
