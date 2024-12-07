@@ -38,83 +38,105 @@ composer require "ahmeti/sovos-api:^1.0"
  - PHP 8.0 veya üzeri
 
 ## E-Fatura Servisi
+
 ```php
-use Bulut\FITApi\FITInvoiceService;
-$service = new \Bulut\FITApi\FITInvoiceService(['username'=> 'WS_KULLANICIADI', 'password'=>'WS_SIFRE'], true);
+
+$service = new Ahmeti\Sovos\Api\InvoiceService(
+    username: 'WS_KULLANICIADI',
+    password: 'WS_SIFRE',
+    test: true
+);
 // Son parametre, TEST ortamında ise true yapabilirsiniz veya boş bırakabilirsiniz.
 ```
 
 ## E-Fatura, E-İrsaliye Kayıtlı Kullanıcılar Listesi (Zip)
+
 ```php
-$getRawUserList = (new \Bulut\InvoiceService\GetRawUserList)
-    ->setIdentifier('SORGULAYAN_PK')
-    ->setVKNTCKN('SORGULAYAN_VKN_TCKN')
-    ->setRole('PK/GB');
+$getRawUserList = new Ahmeti\Sovos\Invoice\GetRawUserList(
+    Identifier: 'SORGULAYAN_PK', // SORGULAYAN_PK veya SORGULAYAN_GB
+    VKN_TCKN: 'SORGULAYAN_VKN_TCKN',
+    Role: 'PK' // PK veya GB
+);
 
 $response = $service->GetRawUserListRequest($getRawUserList);
 
-file_put_contents('/path/to/zip-file.zip', base64_decode($response->getDocData()));
+file_put_contents('/path/to/zip-file.zip', base64_decode($response->DocData));
 ```
 
 ## E-Fatura Kayıtlı Kullanıcılar Sorgulama
 Liste halinde kayıtlı kullanıcılar listesini dönecektir. Fonksiyonun daha detaylı açıklamasını Sovos Web Servis Dökümanından edinebilirsiniz.
+
 ```php
-$userListRequest = new \Bulut\InvoiceService\GetUserList();
-$userListRequest->setIdentifier("SORGULAYAN_PK");
-$userListRequest->setVKNTCKN("SORGULAYAN_VKN_TCKN");
-$userListRequest->setRole("PK/GB"); // PK, GB
-$userListRequest->setFilterVKNTCKN("SORGULANAN_VKN_TCKN");
+$userListRequest = new Ahmeti\Sovos\Invoice\GetUserList(
+    Identifier: 'SORGULAYAN_PK', // SORGULAYAN_PK veya SORGULAYAN_GB
+    VKN_TCKN: 'SORGULAYAN_VKN_TCKN',
+    Role: 'PK', // PK veya GB
+    Filter_VKN_TCKN: 'SORGULANAN_VKN_TCKN'
+);
+
 $list = $service->GetUserListRequest($userListRequest);
 ```
 
 ## E-Fatura Gelen/Giden Faturaları Sorgulama
 Posta kutunuza gelen faturaları listelemek için tetiklenen fonksiyon. Fonksiyon parametreleri ile ilgili detaylı bilgiyi Sovos E-Fatura Dökümanında bulabilirsiniz.
+
 ```php
-$getUblRequest = new \Bulut\InvoiceService\GetUblList();
-$getUblRequest->setIdentifier("SORGULAYAN_PK"); // SORGULAYAN_PK, SORGULAYAN_GB
-$getUblRequest->setVKNTCKN("SORGULAYAN_VKN_TCKN"); 
-$getUblRequest->setDocType("INVOICE"); // INVOICE, ENVOLOPE
-$getUblRequest->setType("INBOUND"); // INBOUND, OUTBOUND
-$getUblRequest->setFromDate("yyyy-MM-dd");
-$getUblRequest->setToDate(getSession("yyyy-MM-dd"));
-$getUblRequest->setFromDateSpecified(true);
-$getUblRequest->setToDateSpecified(true);
+$getUblRequest = new Ahmeti\Sovos\Invoice\GetUblList(
+    Identifier: 'SORGULAYAN_PK', // SORGULAYAN_PK veya SORGULAYAN_GB
+    VKN_TCKN: 'SORGULAYAN_VKN_TCKN',
+    UUID: 'FATURA_UUID',
+    DocType: 'INVOICE', // INVOICE veya ENVOLOPE    
+    Type: 'INBOUND', // INBOUND veya OUTBOUND
+    FromDate: '2020-01-01T00:00:00+03:00',
+    ToDate: '2020-01-01T00:00:00+03:00',
+    FromDateSpecified: true,
+    ToDateSpecified: true
+);
 $list = $service->GetUblListRequest($getUblRequest);
 ```
 
 ## E-Fatura Gelen/Giden Fatura PDF veya HTML İndirme
 Seçmiş olduğunuz faturanın PDF veya HTML çıktısını almanızı sağlar. Parametreler ile ilgili daha detaylı bilgiyi Sovos E-Fatura dökümanından inceleyebilirsiniz.
+
 ```php
-$getInvoiceRequest = new \Bulut\InvoiceService\GetInvoiceView();
-$getInvoiceRequest->setUUID("FATURA_UUID");
-$getInvoiceRequest->setIdentifier("SORGULAYAN_PK"); // SORGULAYAN_PK, SORGULAYAN_GB
-$getInvoiceRequest->setVKNTCKN("SORGULAYAN_VKN_TCKN");
-$getInvoiceRequest->setType("INVOICE"); // INVOICE, ENVOLOPE
-$getInvoiceRequest->setDocType("PDF"); // PDF, PDF_DEFAULT, HTML
+$getInvoiceRequest = new Ahmeti\Sovos\Invoice\GetInvoiceView(
+    UUID: 'FATURA_UUID',
+    Identifier: 'SORGULAYAN_PK', // SORGULAYAN_PK veya SORGULAYAN_GB
+    VKN_TCKN: 'SORGULAYAN_VKN_TCKN',
+    Type: 'INVOICE', // INVOICE veya ENVOLOPE
+    DocType: 'PDF' // PDF, PDF_DEFAULT veya HTML
+);
+
 $data = $service->GetInvoiceViewRequest($getInvoiceRequest);
 ```
 
 ## E-Fatura Gelen/Giden Fatura UBL İndirme
 Seçmiş olduğunuz faturanın UBL çıktısını almanıza yarar. Parametreler için daha detaylı bilgiyi Sovos E-Fatura Dökümanında bulabilirsiniz.
+
 ```php
-$getUblRequest = new \Bulut\InvoiceService\GetUbl();
-$getUblRequest->setIdentifier("SORGULAYAN_PK"); // SORGULAYAN_PK, SORGULAYAN_GB
-$getUblRequest->setVKNTCKN("SORGULAYAN_VKN_TCKN");
-$getUblRequest->setDocType("INVOICE"); // INVOICE, ENVOLOPE
-$getUblRequest->setType("UBL");
-$getUblRequest->setUUID("FATURA_UUID");
-$getUblRequest->setParameters("DOC_DATA");
+$getUblRequest = new Ahmeti\Sovos\Invoice\GetUbl(
+    Identifier: 'SORGULAYAN_PK', // SORGULAYAN_PK veya SORGULAYAN_GB
+    VKN_TCKN: 'SORGULAYAN_VKN_TCKN',
+    UUID: 'FATURA_UUID',
+    DocType: 'INVOICE', // INVOICE veya ENVOLOPE
+    Type: 'UBL',
+    Parameters: 'DOC_DATA'
+);
+
 $data = $service->GetUblRequest($getUblRequest);
 ```
 
 ## E-Fatura Zarf Sorgulama
 Seçilen zarfın durumunu vb. durumları sorgulama ve detaylar için kullanılan fonksiyon. Daha detaylı bilgi için Sovos dökümanına göz atınız.
+
 ```php
-$getEnvelopeRequest = new \Bulut\InvoiceService\GetEnvelopeStatus();
-$getEnvelopeRequest->setIdentifier("SORGULAYAN_PK"); // SORGULAYAN_PK, SORGULAYAN_GB
-$getEnvelopeRequest->setVKNTCKN("SORGULAYAN_VKN_TCKN");
-$getEnvelopeRequest->setUUID("ZARF_UUID");
-$getEnvelopeRequest->setParameters("DOC_DATA"); // EK PARAMETRE
+$getEnvelopeRequest = new Ahmeti\Sovos\Invoice\GetEnvelopeStatus(
+    Identifier: 'SORGULAYAN_PK', // SORGULAYAN_PK veya SORGULAYAN_GB
+    VKN_TCKN: 'SORGULAYAN_VKN_TCKN',
+    UUID: 'ZARF_UUID',
+    Parameters: 'DOC_DATA' // EK PARAMETRE
+);
+
 $data = $service->GetEnvelopeStatusRequest($getEnvelopeRequest);
 ```
 
@@ -124,75 +146,60 @@ $data = $service->GetEnvelopeStatusRequest($getEnvelopeRequest);
     <summary>Örneği incelemek için tıklayınız.</summary>
 
 ```php
-$appResp = new \Bulut\eFaturaUBL\ApplicationResponse();
-$appResp->UBLVersion = "2.1";
-$appResp->CustomizationID = "TR1.2";
-$appResp->ProfileID = "TICARIFATURA";
-$appResp->ID = \Bulut\eFaturaUBL\XMLHelper::CreateGUID();
-$appResp->UUID = $UUID;
-$appResp->IssueDate = date('Y-m-d', strtotime($tarih));
+$appResp = new Ahmeti\Ubl\ApplicationResponse(
+    UBLVersionID: '2.1',
+    CustomizationID: 'TR1.2',
+    ProfileID: 'TICARIFATURA',
+    ID: '8e593889-917d-4e45-bef1-41aeff67b2f2',
+    UUID: '243639d3-48e6-4b25-a9f2-5a148f855c3e',
+    IssueDate: '2021-09-01',
+    IssueTime: '00:00:00',
+    Note: [],
+    Signature: null,
+    SenderParty: new Ahmeti\Ubl\SenderParty(
+        PartyIdentification: new Ahmeti\Ubl\PartyIdentification(
+            ID: ['val' => 'GONDERICI_TCKN_VKN', 'attrs' => ['schemaID="TCKN"']],
+        ),
+        PartyName: new Ahmeti\Ubl\PartyName(
+            Name: 'Ahmet İmamoğlu'
+        ),
+        PostalAddress: new Ahmeti\Ubl\PostalAddress(
+            CitySubdivisionName: 'Nilüfer',
+            CityName: 'Bursa',
+            Country: new Ahmeti\Ubl\Country(
+                Name: 'Türkiye'
+            )
+        )
+    ),
+    ReceiverParty: new Ahmeti\Ubl\ReceiverParty(
+        PartyIdentification: new Ahmeti\Ubl\PartyIdentification(
+            ID: ['val' => 'ALICI_TCKN_VKN', 'attrs' => ['schemaID="TCKN"']],
+        ),
+        PartyName: new Ahmeti\Ubl\PartyName(
+            Name: 'Ahmet İmamoğlu'
+        ),
+        PostalAddress: new Ahmeti\Ubl\PostalAddress(
+            CitySubdivisionName: 'Nilüfer',
+            CityName: 'Bursa',
+            Country: new Ahmeti\Ubl\Country(
+                Name: 'Türkiye'
+            )
+        )
+    ), DocumentResponse: new Ahmeti\Ubl\DocumentResponse(
+        Response: new Ahmeti\Ubl\Response(
+            ReferenceID: '12345',
+            ResponseCode: 'KABUL'
+        ),
+        DocumentReference: new Ahmeti\Ubl\DocumentReference(
+            ID: '8e593889-917d-4e45-bef1-41aeff67b2f2',
+            DocumentType: 'FATURA',
+            DocumentTypeCode: 'FATURA',
+            IssueDate: 'BELGE_TARIHI'
+        )
+    )
+);
 
-// SenderParty
-$senderParty = new \Bulut\eFaturaUBL\SenderParty();
-
-$senderParty_Identification = new \Bulut\eFaturaUBL\PartyIdentification();
-$senderParty_Identification->ID = ['val'=> "GONDERICI_TCKN_VKN", 'attrs' => ['schemaID="TCKN"']];
-$senderParty->PartyIdentification = $senderParty_Identification;
-
-$senderParty_Name = new \Bulut\eFaturaUBL\PartyName();
-$senderParty_Name->Name = "Orhan Gazi Başlı";
-$senderParty->PartyName = $senderParty_Name;
-
-$senderParty_PostalAddress = new \Bulut\eFaturaUBL\PostalAddress();
-$senderParty_PostalAddress->CitySubdivisionName = "Aşık Veysel";
-$senderParty_PostalAddress->CityName = "Kayseri";
-
-$senderParty_PostalAddress_Country = new \Bulut\eFaturaUBL\Country();
-$senderParty_PostalAddress_Country->Name = "Türkiye";
-$senderParty_PostalAddress->Country = $senderParty_PostalAddress_Country;
-$senderParty->PostalAddress = $senderParty_PostalAddress;
-$appResp->SenderParty = $senderParty;
-
-// ReceiverParty
-$receiverParty = new \Bulut\eFaturaUBL\SenderParty();
-
-$receiverParty_Identification = new \Bulut\eFaturaUBL\PartyIdentification();
-$receiverParty_Identification->ID = ['val'=> "ALICI_TCKN_VKN", 'attrs' => ['schemaID="TCKN"']];
-$receiverParty->PartyIdentification = $receiverParty_Identification;
-
-$receiverParty_Name = new \Bulut\eFaturaUBL\PartyName();
-$receiverParty_Name->Name = "Orhan Gazi Başlı";
-$receiverParty->PartyName = $receiverParty_Name;
-
-$receiverParty_PostalAddress = new \Bulut\eFaturaUBL\PostalAddress();
-$receiverParty_PostalAddress->CitySubdivisionName = "Aşık Veysel";
-$receiverParty_PostalAddress->CityName = "Kayseri";
-
-$receiverParty_PostalAddress_Country = new \Bulut\eFaturaUBL\Country();
-$receiverParty_PostalAddress_Country->Name = "Türkiye";
-$receiverParty_PostalAddress->Country = $receiverParty_PostalAddress_Country;
-$receiverParty->PostalAddress = $receiverParty_PostalAddress;
-$appResp->ReceiverParty= $receiverParty;
-
-
-$documentResponse = new \Bulut\eFaturaUBL\DocumentResponse();
-
-$documentResponse_Response = new \Bulut\eFaturaUBL\Response();
-$documentResponse_Response->ReferenceID = "12345";
-$documentResponse_Response->ResponseCode = "KABUL";
-$documentResponse->Response = $documentResponse_Response;
-
-$documentResponse_DocumentReference = new \Bulut\eFaturaUBL\DocumentReference();
-$documentResponse_DocumentReference->ID = $UUID;
-$documentResponse_DocumentReference->DocumentType = "FATURA";
-$documentResponse_DocumentReference->DocumentTypeCode = "FATURA";
-$documentResponse_DocumentReference->IssueDate = "BELGE_TARIHI"; // Y-m-d
-$documentResponse->DocumentReference = $documentResponse_DocumentReference;
-
-$appResp->DocumentResponse = $documentResponse;
-
-$xmlHelper = new \Bulut\eFaturaUBL\XMLHelper($appResp);
-$xml = $xmlHelper->getApplicationResponseXML();
+$xml = (new Ahmeti\Ubl\Utils\UblInvoice($appResp))->getApplicationResponseXML();
 ```
 </details>
 
@@ -412,7 +419,8 @@ $xml = new \Bulut\eFaturaUBL\XMLHelper($invoice);
 ## E-Fatura Gönderme
 Aşağıda oluşturmuş olduğumuz XML (UBL) dosyası son senaryo olarak faturalaştırmak için Sovos servislerine göndermek için kullandığımız fonksiyon. Burada dikkat edilmesi gereken nokta. Zip dosyası oluşturup bu oluşturduğumuz ZIP dosyası ve fatura UUID aynı olmasıdır ve ZIP dosyasını BASE64 yapıp Sovosya gönderiyoruz ve cevabını alıyoruz.
 
-Genel olarak dikkat etmemiz gerekenler Sovos ve GIB dökümanlarını inceleyerek oradaki isimler ve sınıflarımız aynı isimdedir. UBL oluşturup cevabını alabilirsiniz. 
+Genel olarak dikkat etmemiz gerekenler Sovos ve GIB dökümanlarını inceleyerek oradaki isimler ve sınıflarımız aynı isimdedir. UBL oluşturup cevabını alabilirsiniz.
+
 ```php
 $destination = 'temp/'.$uuid.'.zip';
 $zip = new ZipArchive();
@@ -424,7 +432,7 @@ $zip->addFromString($uuid.'.xml', $xml->getInvoiceResponseXML());
 $zip->close();
 
 
-$sendUblRequest = new \Bulut\InvoiceService\SendUBL();
+$sendUblRequest = new \Ahmeti\Sovos\InvoiceService\SendUBL();
 $sendUblRequest->setVKNTCKN("GONDERICI_VKN_TCKN");
 $sendUblRequest->setDocType("INVOICE"); // veya APP_RESP
 $sendUblRequest->setReceiverIdentifier("ALICI_PK");
@@ -436,17 +444,25 @@ $result = $service->SendUBLRequest($sendUblRequest);
 ```
 
 ## E-Arşiv Servisi
+
 ```php
-use \Bulut\FITApi\FITArchiveService;
-$service = new \Bulut\FITApi\FITArchiveService(['username'=>'EARSIV_WS_Kullanici', 'password'=>'EARSIV_WS_Sifre'], true);
+
+$service = new \Ahmeti\Sovos\Api\ArchiveService(
+    username: 'EARSIV_WS_Kullanici',
+    password: 'EARSIV_WS_Sifre',
+    test: true
+);
 // Son parametre, TEST ortamında ise true yapabilirsiniz veya boş bırakabilirsiniz.
 ```
 
 ## E-Arşiv Kayıtlı Kullanıcılar Listesi (Zip)
 Kayıtlı kullanıcılar listesini ZIP olarak dönüş yapar.
+
 ```php
-$getDocument = new \Bulut\ArchiveService\GetUserList();
-$getDocument->setVknTckn("GONDERICI_VKN_TCKN");
+$getDocument = new \Ahmeti\Sovos\Archive\GetUserList(
+    vknTckn: 'GONDERICI_VKN_TCKN',
+);
+
 $result = $service->GetUserListRequest($getDocument);
 ```
 
@@ -683,6 +699,7 @@ $xml = new \Bulut\eFaturaUBL\XMLHelper($invoice);
 
 ## E-Arşiv Gönderme
 Oluşturmuş olduğumuz E-Arşiv XML'ini Sovos sistemlerine göndermek için kullandığımız fonksiyon.
+
 ```php
 $destination = 'temp/'.$rand.'.zip';
 $rand = rand(1000,9999);
@@ -694,27 +711,27 @@ if($zip->open($destination,ZIPARCHIVE::CREATE) !== true) {
 $zip->addFromString($uuid.'.xml', $xml);
 $zip->close();
 
-$sendUblRequest = new \Bulut\ArchiveService\SendInvoice();
-$sendUblRequest->setSenderID("GONDERICI_VKN_TCKN");
-$sendUblRequest->setHash(md5_file($destination));
-$sendUblRequest->setFileName($rand.'.zip');
-$sendUblRequest->setDocType("XML");
-$sendUblRequest->setBinaryData(base64_encode(file_get_contents($destination)));
-
-$custParam = new \Bulut\ArchiveService\CustomizationParam();
-$custParam->paramName = "BRANCH";
-$custParam->paramValue = "default";
-$sendUblRequest->setCustomizationParams([$custParam]);
-
-$respOut = new \Bulut\ArchiveService\responsiveOutput();
-$respOut->outputType = "PDF";
-$sendUblRequest->setResponsiveOutput($respOut);
+$sendUblRequest = new \Ahmeti\Sovos\Archive\SendInvoice(
+    senderID: 'GONDERICI_VKN_TCKN',
+    hash: md5_file($destination),
+    fileName: $rand.'.zip',
+    docType: 'XML',
+    binaryData: base64_encode(file_get_contents($destination)),
+    customizationParams: [new \Ahmeti\Sovos\Archive\CustomizationParam(
+        paramName: 'BRANCH',
+        paramValue: 'default'
+    )],
+    responsiveOutput: new \Ahmeti\Sovos\Archive\responsiveOutput(
+        outputType: 'PDF'
+    ) 
+);
 
 $result = $service->SendInvoiceRequest($sendUblRequest);
 ```
 
 ## E-Arşiv Zarf Gönderme
 Detaylar için Sovos E-Arşiv dökümanını inceleyebilirsiniz.
+
 ```php
 $destination = 'temp/'.$rand.'.zip';
 $rand = rand(1000,9999);
@@ -727,14 +744,14 @@ $zip->addFromString($uuid.'.xml', $xml);
 $zip->close();
 
 
-$sendUblRequest = new \Bulut\ArchiveService\SendEnvelope();
+$sendUblRequest = new \Ahmeti\Sovos\ArchiveService\SendEnvelope();
 $sendUblRequest->setSenderID("GONDERICI_VKN_TCKN");
 $sendUblRequest->setHash(md5_file($destination));
 $sendUblRequest->setFileName($rand.'.zip');
 $sendUblRequest->setDocType("XML");
 $sendUblRequest->setBinaryData(base64_encode(file_get_contents($destination)));
 
-$custParam = new \Bulut\ArchiveService\CustomizationParam();
+$custParam = new \Ahmeti\Sovos\ArchiveService\CustomizationParam();
 $custParam->paramName = "BRANCH";
 $custParam->paramValue = "default";
 $sendUblRequest->setCustomizationParams([$custParam]);
@@ -744,8 +761,9 @@ $result = $service->SendEnvelopeRequest($sendUblRequest);
 
 ## E-Arşiv İptal Etme
 Gerekli alanları doldurarak faturayı iptal edebiliriz. Değişkenleri Sovos dökümanından kontrol edebilirsiniz.
+
 ```php
-$getDocument = new \Bulut\ArchiveService\InvoiceCancelInfoTypeList();
+$getDocument = new \Ahmeti\Sovos\ArchiveService\InvoiceCancelInfoTypeList();
 
 $getDocument->setInvoiceId("INVOICE_NUMBER");
 $getDocument->setVkn("GONDERICI_VKN");
@@ -754,15 +772,16 @@ $getDocument->setTotalAmount("FATURA_TUTARI");
 $getDocument->setCancelDate("Y-m-d");
 $getDocument->setCustInvID("CUST_INV_ID");
 
-$cancelService = new \Bulut\ArchiveService\CancelInvoice();
+$cancelService = new \Ahmeti\Sovos\ArchiveService\CancelInvoice();
 $cancelService->setInvoiceCancelInfoTypeList([$getDocument]);
 $resutl = $service->CancelInvoiceRequest($cancelService);
 ```
 
 ## E-Arşiv Tekrar Tetikleme
 Gönderilmiş bir faturayı tekrar iletmek için kullanılan fonksiyon CustomParameters için Sovos dökümanlarına göz atınız.
+
 ```php
-$getDocument = new \Bulut\ArchiveService\RetriggerOperation();
+$getDocument = new \Ahmeti\Sovos\ArchiveService\RetriggerOperation();
 $getDocument->setVKN("GONDERICI_VKN_TCKN");
 $getDocument->setBranch("GONDERICI_SUBE");
 $getDocument->setInvoiceID("FATURA_NUMARASI");
@@ -773,7 +792,7 @@ $customParams = [];
 foreach($customParams as $key => $val){
     $name = $val;
     if($name != ""){
-        $custObj = new \Bulut\ArchiveService\CustomizationParam();
+        $custObj = new \Ahmeti\Sovos\ArchiveService\CustomizationParam();
         $custObj->paramName = $name;
         $custObj->paramValue = $_POST['paramValue'][$key];
         $cust[] = $custObj;
@@ -785,8 +804,9 @@ $result = $service->GetRetriggerOperationRequest($getDocument);
 
 ## E-Arşiv İndirme
 Fonksiyonu tetikleyerek göndermiş olduğunuz faturanın görselini indirebilirsiniz.
+
 ```php
-$getDocument = new \Bulut\ArchiveService\GetInvoiceDocument();
+$getDocument = new \Ahmeti\Sovos\ArchiveService\GetInvoiceDocument();
 $getDocument->setUUID("FATURA_UUID");
 $getDocument->setVkn("GONDERICI_VKN");
 $getDocument->setInvoiceNumber("FATURA_NUMARASI");
@@ -798,8 +818,9 @@ $result = $service->GetInvoiceDocumentRequest($getDocument);
 
 ## E-Arşiv İmzalama
 Fonksiyonu tetikleyerek imzalama işlemi gerçekleştirebilirsiniz. SDK'da kullanılan tüm fonksiyon ve değişken isimleri Sovos ve GIB sistemine uygundur. Sovos ve GIB dökümanlarını inceleyerek kolaylıkla entegrasyon sağlayabilirsiniz.
+
 ```php
-$getDocument = new \Bulut\ArchiveService\GetSignedInvoice();
+$getDocument = new \Ahmeti\Sovos\ArchiveService\GetSignedInvoice();
 $getDocument->setUUID("FATURA_UUID");
 $getDocument->setVkn("GONDERICI_VKN");
 $getDocument->setInvoiceNumber("FATURA_NUMARASI");
