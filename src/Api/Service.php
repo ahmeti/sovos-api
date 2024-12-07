@@ -38,11 +38,11 @@ class Service
 
     protected Client $client;
 
-    public function __construct(array $options = [], bool $test = false)
+    public function __construct(string $username, string $password, bool $test = false)
     {
         $this->url = $test ? $this->url_test : $this->url_prod;
         $this->headers['Host'] = parse_url($this->url, PHP_URL_HOST);
-        $this->headers['Authorization'] = 'Basic '.base64_encode(($options['username'].':'.$options['password']));
+        $this->headers['Authorization'] = 'Basic '.base64_encode($username.':'.$password);
         $this->client = new Client;
     }
 
