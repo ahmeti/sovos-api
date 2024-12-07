@@ -4,6 +4,9 @@ namespace Ahmeti\Sovos\Archive;
 
 class SendEnvelope
 {
+    /**
+     * @param  CustomizationParam[]  $customizationParams
+     */
     public function __construct(
         public string $soapAction = 'sendEnvelope',
         public string $methodName = 'sendInvoiceRequestType',
@@ -15,6 +18,6 @@ class SendEnvelope
         public ?string $fileName = null,
         public ?string $hash = null,
         public ?string $binaryData = null,
-        public ?string $customizationParams = null
+        public array $customizationParams = []
     ) {}
 }

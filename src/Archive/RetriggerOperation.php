@@ -4,6 +4,9 @@ namespace Ahmeti\Sovos\Archive;
 
 class RetriggerOperation
 {
+    /**
+     * @param  CustomizationParam[]  $customizationParams
+     */
     public function __construct(
         public string $soapAction = 'retriggerOperation',
         public string $methodName = 'retriggerServiceRequest',
@@ -13,6 +16,6 @@ class RetriggerOperation
         public ?string $branch = null,
         public ?string $invoiceID = null,
         public ?string $invoiceUUID = null,
-        public ?string $customizationParams = null
+        public array $customizationParams = []
     ) {}
 }
