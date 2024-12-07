@@ -131,6 +131,8 @@ class Service
         foreach ($variables as $key => $val) {
             if (is_object($val)) {
                 $this->makeSubXml($val, $subXml, $prefix, $namespace);
+            } elseif (is_array($val)) {
+                $this->makeSubXml($val, $subXml, $prefix, $namespace);
             } else {
                 if (strlen($val) > 0) {
                     $subXml .= '<'.($prefix ? $this->soapSubClassPrefix.':' : '').$key.'>'.$val.'</'.($prefix ? $this->soapSubClassPrefix.':' : '').$key.'>';
