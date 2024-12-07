@@ -1,19 +1,19 @@
 <?php
 
-namespace Bulut\FITApi;
+namespace Ahmeti\Sovos\Api;
 
-use Bulut\DespatchService\GetDesEnvelopeStatus;
-use Bulut\DespatchService\GetDesEnvelopeStatusResponse;
-use Bulut\DespatchService\GetDesUBL;
-use Bulut\DespatchService\GetDesUBLList;
-use Bulut\DespatchService\GetDesUBLListResponse;
-use Bulut\DespatchService\GetDesUBLResponse;
-use Bulut\DespatchService\GetDesUserList;
-use Bulut\DespatchService\GetDesUserListResponse;
-use Bulut\DespatchService\GetDesView;
-use Bulut\DespatchService\GetDesViewResponse;
-use Bulut\DespatchService\SendDespatch;
-use Bulut\DespatchService\SendDespatchResponse;
+use Ahmeti\Sovos\Despatch\GetDesEnvelopeStatus;
+use Ahmeti\Sovos\Despatch\GetDesEnvelopeStatusResponse;
+use Ahmeti\Sovos\Despatch\GetDesUBL;
+use Ahmeti\Sovos\Despatch\GetDesUBLList;
+use Ahmeti\Sovos\Despatch\GetDesUBLListResponse;
+use Ahmeti\Sovos\Despatch\GetDesUBLResponse;
+use Ahmeti\Sovos\Despatch\GetDesUserList;
+use Ahmeti\Sovos\Despatch\GetDesUserListResponse;
+use Ahmeti\Sovos\Despatch\GetDesView;
+use Ahmeti\Sovos\Despatch\GetDesViewResponse;
+use Ahmeti\Sovos\Despatch\SendDespatch;
+use Ahmeti\Sovos\Despatch\SendDespatchResponse;
 use Bulut\Exceptions\GlobalForibaException;
 use Bulut\Exceptions\SchemaValidationException;
 use Bulut\Exceptions\SovosException;
@@ -60,7 +60,7 @@ class FITDespatchService
         $parsed_url = parse_url(self::$URL);
         $this->headers['Host'] = $parsed_url['host'];
         $this->headers['Authorization'] = 'Basic '.$this->getAuth($options['username'], $options['password']);
-        $this->client = new Client();
+        $this->client = new Client;
     }
 
     public function getLastRequest()
@@ -258,7 +258,7 @@ class FITDespatchService
         $ublList = $soap->xpath('//s:Body')[0];
         $list = [];
         foreach ($ublList->getDesUBLListResponse->Response as $ubl) {
-            $responseObj = new GetDesUBLListResponse();
+            $responseObj = new GetDesUBLListResponse;
             $this->fillObj($responseObj, $ubl);
             $list[] = $responseObj;
         }
@@ -282,13 +282,13 @@ class FITDespatchService
 
             foreach ($ubl->getDesUBLResponse->Response as $data) {
 
-                $responseObj = new GetDesUBLResponse();
+                $responseObj = new GetDesUBLResponse;
                 $responseObj->DocData = (string) $data->DocData;
                 $responseObj->setDocType($request->Parameters);
                 $list[] = $responseObj;
             }
         } else {
-            $responseObj = new GetDesUBLResponse();
+            $responseObj = new GetDesUBLResponse;
             $responseObj->DocData = (string) $ubl->getDesUBLResponse->Response->DocData;
             $responseObj->setDocType($request->Parameters);
             $list[] = $responseObj;
@@ -310,7 +310,7 @@ class FITDespatchService
         $ublList = $soap->xpath('//s:Body')[0];
         $list = [];
         foreach ($ublList->getDesEnvelopeStatusResponse->Response as $status) {
-            $responseObj = new GetDesEnvelopeStatusResponse();
+            $responseObj = new GetDesEnvelopeStatusResponse;
             $this->fillObj($responseObj, $status);
             $list[] = $responseObj;
         }
@@ -330,7 +330,7 @@ class FITDespatchService
         $ublList = $soap->xpath('//s:Body')[0];
         $list = [];
         foreach ($ublList->sendDesUBLResponse->Response as $status) {
-            $responseObj = new SendDespatchResponse();
+            $responseObj = new SendDespatchResponse;
             $this->fillObj($responseObj, $status);
             $list[] = $responseObj;
         }
@@ -366,7 +366,7 @@ class FITDespatchService
         $list = [];
         $responses = count($ubl->getDesViewResponse->Response) > 1 ? $ubl->getDesViewResponse->Response : [$ubl->getDesViewResponse->Response];
         foreach ($responses as $response) {
-            $responseObj = new GetDesViewResponse();
+            $responseObj = new GetDesViewResponse;
             $this->fillObj($responseObj, $response);
             $list[] = $responseObj;
         }

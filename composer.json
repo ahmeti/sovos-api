@@ -29,7 +29,7 @@
             "Bulut\\InvoiceService\\": "src/Bulut/InvoiceService/",
             "Bulut\\ArchiveService\\": "src/Bulut/ArchiveService/",
             "Bulut\\SMMService\\": "src/Bulut/SMMService/",
-            "Bulut\\DespatchService\\": "src/Bulut/DespatchService/",
+            "Ahmeti\\Sovos\\Despatch\\": "src/Despatch/",
             "Bulut\\Exceptions\\": "src/Bulut/Exceptions/"
         }
     },
