@@ -45,7 +45,7 @@ class ArchiveService extends Service
                 if (is_array($val) || is_object($val)) {
                     $this->makeSubXml($val, $subXml, $prefix, $namespace);
                 } else {
-                    if (strlen($val) > 0) {
+                    if (is_string($val) && strlen($val) > 0) {
                         $subXml .= $val;
                     }
                 }
