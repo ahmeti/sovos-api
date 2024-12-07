@@ -38,8 +38,12 @@ class Service
 
     protected Client $client;
 
-    public function __construct(string $username, string $password, bool $test = false)
-    {
+    public function __construct(
+        private string $username,
+        private string $password,
+        private bool $test = false,
+        private bool $debug = false
+    ) {
         $this->url = $test ? $this->url_test : $this->url_prod;
         $this->headers['Host'] = parse_url($this->url, PHP_URL_HOST);
         $this->headers['Authorization'] = 'Basic '.base64_encode($username.':'.$password);
@@ -93,6 +97,10 @@ class Service
         }
         if (get_class($request) == GetDocument::class) {
             $xmlMake = str_replace(['get:', ':get'], ['esmm:', ':esmm'], $xmlMake);
+        }
+
+        if ($this->debug) {
+            throw new GlobalException($xmlMake);
         }
 
         $this->headers['SOAPAction'] = $soapAction;
