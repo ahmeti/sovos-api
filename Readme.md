@@ -1,7 +1,7 @@
-﻿# Sovos E-Fatura, E-Arşiv, E-İrsaliye
+﻿> [!IMPORTANT]
+> ‼️ UYARI  ‼️ Bu paket arşivlenmiş ve güncellemeyecektir. Yeni paketi inceleyebilirsiniz. https://github.com/ahmeti/sovos
 
-## UYARI
-### ‼️ Yeni pakete taşındı => https://github.com/ahmeti/sovos  ‼️
+# Sovos E-Fatura, E-Arşiv, E-İrsaliye
 
 ### Giriş
  - [Kurulum](#kurulum)
