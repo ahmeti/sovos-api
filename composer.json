@@ -15,6 +15,10 @@
             "homepage": "http://unlembilisim.com/"
         }
     ],
+    "abandoned": "ahmeti/sovos",
+    "suggest": {
+        "ahmeti/sovos": "Lütfen ahmeti/sovos-api paketini silip, güncel olan ahmeti/sovos paketini yükleyeniz.",
+    },
     "require": {
         "php": ">=8.0",
         "guzzlehttp/guzzle": ">=7.0",
