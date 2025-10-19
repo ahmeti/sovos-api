@@ -1,5 +1,7 @@
 ﻿> [!IMPORTANT]
-> ‼️ UYARI  ‼️ Bu paket arşivlenmiş ve güncellemeyecektir. Yeni paketi inceleyebilirsiniz. https://github.com/ahmeti/sovos
+> ‼️ UYARI  ‼️ Bu paket <ins>arşivlenmiş</ins> ve <ins>güncellenmeyecektir.</ins> Lütfen yeni paketi kullanınız!
+> 
+> https://github.com/ahmeti/sovos
 
 # Sovos E-Fatura, E-Arşiv, E-İrsaliye
 
